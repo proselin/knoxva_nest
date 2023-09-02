@@ -1,7 +1,8 @@
-import {Controller, Get, Logger, Res} from "@nestjs/common";
+import {Body, Controller, Get, Logger, Res} from "@nestjs/common";
 import { GenImageService } from "./gen-image.service";
 import testJson from "@assets/json/test-json";
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
+import { GenImageDTO } from "./dtos/genImage.dto";
 
 @Controller('/gen')
 export class GenImageController {
@@ -12,15 +13,13 @@ export class GenImageController {
 
 
     @Get()
-    genImage() {
+    genImage(@Body() genImageBody: GenImageDTO) {
             Logger.log('Have In')
             const template = testJson
             const imageId  = ['shit']
-            const obReplace: GenImageReplaceObject[] = [{
-                qr: "",
-                name: "Không ổn rồi",
-            }]
-            return this.genImageService.genImage(template, imageId, obReplace)
+            const obReplace: GenImageReplaceObject[] = genImageBody.options
+            const genQuality = genImageBody.genQuality
+            return this.genImageService.genImage(template, imageId, obReplace, genQuality)
 
     }
 }

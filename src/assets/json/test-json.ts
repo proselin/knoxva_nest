@@ -1,13 +1,13 @@
 export default {
-    "attrs": {"width": 1920, "height": 1080},
+    "attrs": {"width": 1000, "height": 1000},
     "className": "Stage",
     "children": [{
         "attrs": {},
         "className": "Layer",
         "children": [{
             "attrs": {
-                "width": 1920,
-                "height": 1080,
+                "width": 1000,
+                "height": 1000,
                 "name": "image",
                 "0q9u0o2c2k2h3a1n1h958": "image",
                 "id": "shit",

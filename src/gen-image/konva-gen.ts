@@ -6,8 +6,9 @@ import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
 const Konva = require('konva')
-
 export class KonvaGen {
+
+    private readonly logger = new Logger(KonvaGen.name)
     private stage: Stage;
 
 
@@ -18,6 +19,9 @@ export class KonvaGen {
     }
 
     constructStage(options?: string | object) {
+        this.logger.log(":: Create new KonvaGen ")
+
+
         if (!options) this.stage = Konva.Node.create({})
 
         try {
@@ -27,7 +31,7 @@ export class KonvaGen {
                 this.stage = Konva.Node.create(options);
             }
         } catch (e) {
-            Logger.error("Error in parse JSON");
+            this.logger.error("Error in parse JSON");
             throw e;
         }
     }
@@ -37,21 +41,28 @@ export class KonvaGen {
     }
 
     find(defined: string) {
+        this.logger.log(":: Find elements: " +  defined,)
         return this.getStage().find(defined)
     }
 
     findIndex(defined: string) {
+        this.logger.log(":: Find elements by Id: " +  defined,)
         return this.getStage().find(`#${defined}`)
     }
 
     async reFormImages(imagesId: string[]): Promise<{ [p: string]: ({} | Image)[] }> {
-        const imageMatrix = await Promise.all(imagesId.map(value => this.reFormImage(value)))
+        this.logger.log(":: Enter Reform Image ")
+        this.logger.log(imagesId)
+        const imageMatrix = await Promise.all(
+            imagesId.map(value => this.reFormImage(value))
+        )
         let rs: { [p: string]: ({} | Image)[] } = {}
         imagesId.forEach(
             (image, index) => {
                 rs[image] = imageMatrix[index]
             }
         )
+        this.logger.log(":: Complete Reform Image " + JSON.stringify(rs))
         return rs
     }
 
@@ -146,6 +157,8 @@ export class KonvaGen {
 
 
     async replaceObject(object: GenImageReplaceObject) {
+        this.logger.log(":: Enter replaceObject function ")
+        this.logger.log(":: Replace params " + JSON.stringify(object))
         for (const [key, value] of Object.entries(object)) {
             for (const node of this.findIndex(key)) {
                 await this.replaceSingle(node, value);
@@ -155,9 +168,10 @@ export class KonvaGen {
 
 
     async replaceSingle(node: Node<NodeConfig>, value: any) {
+        this.logger.log(":: Enter replaceSingle params" + value)
         switch (node.attrs[DEFINED_TYPE_ATTRIBUTE]) {
             case 'image':
-                await this.reFormSingleImage(node, {value})
+                await this.reFormSingleImage(node, value)
                 break
             case 'text':
                 await this.reFormSingleText(node, value)
