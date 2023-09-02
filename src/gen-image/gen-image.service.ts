@@ -55,10 +55,10 @@ export class GenImageService {
             try {
                 const response = <{ type: string, data: Buffer }>this.decodeBase64Image(dataUrl)
 
-                const filePath = path.join(__dirname, '..', 'assets', 'images', `data${Date.now()}.${response.type.split('/')[1]}`)
+                const filePath = path.join(__dirname, '..', 'assets', 'images_gen', `data${Date.now()}.${response.type.split('/')[1]}`)
 
                 await this.writeFile(filePath, response.data).then(
-                    (value) => {resolve(filePath)},
+                    () => {resolve(filePath)},
                 )
             } catch (e) {
                reject(e)
@@ -80,10 +80,5 @@ export class GenImageService {
 
         return <{ type: string, data: Buffer }>response;
     }
-
-    // checkSaveFilePathExist(path: string){
-    //     if(existSync)
-    // }
-
 
 }

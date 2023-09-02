@@ -73,6 +73,7 @@ export class KonvaGen {
                 }
                 if(node instanceof Text){
                     node.setText(value)
+                    node.fontFamily('Century Gothic')
                     resolve()
                 }
 
