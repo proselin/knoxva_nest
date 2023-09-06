@@ -4,7 +4,8 @@ export default {
     "children": [{
         "attrs": {},
         "className": "Layer",
-        "children": [{
+        "children": [
+            {
             "attrs": {
                 "width": 1000,
                 "height": 1000,
@@ -13,7 +14,18 @@ export default {
                 "id": "shit",
                 "source": "http://localhost:3000/image_background/background-1.png"
             }, "className": "Image"
-        }, {"attrs": {"keepRatio": false}, "className": "Transformer"}, {
+        },
+            {
+                "attrs": {
+                    "width": 500,
+                    "height": 500,
+                    "name": "image",
+                    "0q9u0o2c2k2h3a1n1h958": "image",
+                    "id": "qr",
+                    "source": "http://localhost:3000/image_background/qr.png"
+                }, "className": "Image"
+            },
+            {"attrs": {"keepRatio": false}, "className": "Transformer"}, {
             "attrs": {
                 "text": "Hehe",
                 "x": 209,

@@ -15,11 +15,10 @@ export class GenImageController {
     @Get()
     genImage(@Body() genImageBody: GenImageDTO) {
             Logger.log('Have In')
-            const template = testJson
+            const template = genImageBody.template
             const imageId  = ['shit']
             const obReplace: GenImageReplaceObject[] = genImageBody.options
             const genQuality = genImageBody.genQuality
             return this.genImageService.genImage(template, imageId, obReplace, genQuality)
-
     }
 }
