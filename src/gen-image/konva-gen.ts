@@ -5,7 +5,11 @@ import {GenImageReplaceObject, ToDataUrlConfig, ToImageConfig} from "@gen-image/
 import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
+import {catchError, forkJoin, from, Observable, of, tap} from "rxjs";
+import * as console from "console";
+
 const Konva = require('konva')
+
 export class KonvaGen {
 
     private readonly logger = new Logger(KonvaGen.name)
@@ -41,55 +45,53 @@ export class KonvaGen {
     }
 
     find(defined: string) {
-        this.logger.log(":: Find elements: " +  defined,)
+        this.logger.log(":: Find elements: " + defined,)
         return this.getStage().find(defined)
     }
 
     findIndex(defined: string) {
-        this.logger.log(":: Find elements by Id: " +  defined,)
+        this.logger.log(":: Find elements by Id: " + defined,)
         return this.getStage().find(`#${defined}`)
     }
 
-    async reFormImages(imagesId: string[]): Promise<{ [p: string]: ({} | Image)[] }> {
+    async reFormImages(imagesId: string[]) {
         this.logger.log(":: Enter Reform Image ")
-        this.logger.log(imagesId)
-        const imageMatrix = await Promise.all(
-            imagesId.map(value => this.reFormImage(value))
-        )
-        let rs: { [p: string]: ({} | Image)[] } = {}
-        imagesId.forEach(
-            (image, index) => {
-                rs[image] = imageMatrix[index]
-            }
-        )
-        this.logger.log(":: Complete Reform Image " + JSON.stringify(rs))
-        return rs
+        this.logger.log(JSON.stringify(imagesId))
+         for (const value of imagesId) {
+             await this.reFormImage(value);
+         }
+        // let rs: { [p: string]: ({} | Image)[] } = {}
+        // // imagesId.forEach(
+        // //     (image, index) => {
+        // //         rs[image] = imageMatrix[index]
+        // //     }
+        // // )
+        // this.logger.log(":: Complete Reform Image " + JSON.stringify(rs))
+        // // return rs
     }
 
-    reFormImage(imageId: string): Promise<({} | Image)[]> {
+    reFormImage(imageId: string) {
         const imageEl = this.findIndex(imageId)
 
         if (!imageEl.length) {
             throw new Error("ID did not exists!")
         }
 
-        return Promise.all(imageEl.map(value => this.reFormSingleImage(value)))
+       return  Promise.all(imageEl.map(value => this.reFormSingleImage(value)))
     }
 
     reFormSingleText(node: Node<NodeConfig>, value: string, isStrict: boolean = false) {
         return new Promise<void>(
             (resolve, reject) => {
-                if (!node.attrs['text'] ) {
+                if (!node.attrs['text']) {
                     !isStrict ? resolve() : reject()
                 }
-                if(node instanceof Text){
+                if (node instanceof Text) {
                     node.setText(value)
                     node.fontFamily('Arial')
                     resolve()
                 }
-
-            }
-        )
+            })
     }
 
     private reFormSingleImage(node: Node<NodeConfig>, option?: { value?: string, isStrict?: boolean }) {
@@ -101,9 +103,9 @@ export class KonvaGen {
             const url = option?.value || node.attrs['source']
             Konva.Image.fromURL(url,
                 (source: Image) => {
-                  if(node instanceof  Image) {
-                      node.image(source.getAttr('image'))
-                  }
+                    if (node instanceof Image) {
+                        node.image(source.getAttr('image'))
+                    }
                     resolve(Image)
                 },
                 (error: any) => {
@@ -156,26 +158,40 @@ export class KonvaGen {
     }
 
 
-    async replaceObject(object: GenImageReplaceObject) {
+    replaceObject(object: GenImageReplaceObject, cb: () => any) {
         this.logger.log(":: Enter replaceObject function ")
         this.logger.log(":: Replace params " + JSON.stringify(object))
+        const pro: Promise<any>[] = []
         for (const [key, value] of Object.entries(object)) {
             for (const node of this.findIndex(key)) {
-                await this.replaceSingle(node, value);
+                pro.push(this.replaceSingle(node, value))
             }
         }
+        Promise.all(pro).then(() => cb())
     }
 
 
-    async replaceSingle(node: Node<NodeConfig>, value: any) {
+    //  replaceSingle(node: Node<NodeConfig>, value: any) {
+    //     this.logger.log(":: Enter replaceSingle params" + value)
+    //     switch (node.attrs[DEFINED_TYPE_ATTRIBUTE]) {
+    //         case 'image':
+    //              this.reFormSingleImage(node, value).subscribe()
+    //             break
+    //         case 'text':
+    //              this.reFormSingleText(node, value)
+    //             break
+    //     }
+    // }
+
+    replaceSingle(node: Node<NodeConfig>, value: any) {
         this.logger.log(":: Enter replaceSingle params" + value)
-        switch (node.attrs[DEFINED_TYPE_ATTRIBUTE]) {
-            case 'image':
-                await this.reFormSingleImage(node, value)
-                break
-            case 'text':
-                await this.reFormSingleText(node, value)
-                break
+        switch (node.className) {
+            case "Image":
+                return this.reFormSingleImage(node, value)
+            case 'Text':
+                return this.reFormSingleText(node, value)
+            default:
+                return new Promise<undefined>(resolve => resolve(undefined))
         }
     }
 

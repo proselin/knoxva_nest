@@ -2,8 +2,8 @@ import {GenImageRepositoryInterface} from "@gen-image/types/genImageRepositoryIn
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
 import {GenQuality} from "@gen-image/utils/constant";
 import {KonvaGen} from "@gen-image/konva-gen";
-import {HttpException, HttpStatus, Logger} from "@nestjs/common";
-import {writeFile} from "fs";
+import {HttpException, HttpStatus, Injectable, Logger} from "@nestjs/common";
+import {writeFile, writeFileSync} from "fs";
 import {join} from "node:path";
 
 export class GenImageRepository implements GenImageRepositoryInterface {
@@ -23,11 +23,23 @@ export class GenImageRepository implements GenImageRepositoryInterface {
         return <{ type: string, data: Buffer }>response;
     }
 
-    async genImage(template: string | object, imageId: string[], options: GenImageReplaceObject[], genQuality: GenQuality): Promise<any> {
+    async genImage(
+        konvaGen: KonvaGen,
+        options: GenImageReplaceObject[],
+        genQuality: GenQuality
+    ): Promise<any> {
         this.logger.log(":: Enter genImage function ")
-        const konvaGen = await this.initTemplate(imageId, template)
+
         try {
-            return Promise.all(options.map(option => this.genOneOptions(option, konvaGen, genQuality)))
+            return Promise.all(
+                options.map(
+                    option => this.genOneOptions(
+                        option,
+                        konvaGen,
+                        genQuality
+                    )
+                )
+            )
         } catch (e) {
             this.logger.error(":: Error genImage function ")
             this.logger.error(e)
@@ -45,31 +57,29 @@ export class GenImageRepository implements GenImageRepositoryInterface {
         )
     }
 
-    genOneOptions(option: GenImageReplaceObject, konvaGen: KonvaGen, genQuality: GenQuality): Promise<any> {
+    genOneOptions(option: GenImageReplaceObject, konvaGen: KonvaGen, genQuality: GenQuality): void {
         this.logger.log(":: Enter genOneOptions function ")
         this.logger.log(":: GenQuality " + genQuality)
         this.logger.log(":: options " + JSON.stringify(option))
-        return new Promise(async (resolve, reject) => {
-            await konvaGen.replaceObject(option)
-            konvaGen.draw()
-            const dataUrl = konvaGen.toDataUrl(genQuality)
-            try {
-                this.logger.log(":: genOneOptions DataUrl success ")
-                const response =
-                    <{ type: string, data: Buffer }>
-                        this.decodeBase64Image(dataUrl)
-                const filePath = this.genNewImagePath(response.type)
-                await this.writeFile(filePath, response.data).then(
-                    () => {
+        // return new Promise(async (resolve, reject) => {
+        konvaGen.replaceObject(option,
+            () => {
+                konvaGen.draw()
+                const dataUrl = konvaGen.toDataUrl(genQuality)
+                try {
+                    this.logger.log(":: genOneOptions DataUrl success ")
+                    const response =
+                        <{ type: string, data: Buffer }>
+                            this.decodeBase64Image(dataUrl)
+                    const filePath = this.genNewImagePath(response.type)
+                    writeFile(filePath, response.data, () => {
                         this.logger.log(":: genOneOptions result at: ", filePath)
-                        resolve(filePath)
-                    },
-                )
-            } catch (e) {
-                this.logger.error(":: genOneOptions Error")
-                reject(e)
+                    })
+                } catch (e) {
+                    this.logger.error(":: genOneOptions Error")
+                }
             }
-        })
+        )
     }
 
     async initTemplate(imageId: string[], template: string | object): Promise<KonvaGen> {
@@ -94,5 +104,7 @@ export class GenImageRepository implements GenImageRepositoryInterface {
             })
         })
     }
+
+
 
 }
