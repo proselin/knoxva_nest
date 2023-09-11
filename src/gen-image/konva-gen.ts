@@ -100,7 +100,7 @@ export class KonvaGen {
             if (!node.attrs['source'] && !option?.value) {
                 !option?.isStrict ? resolve({}) : reject()
             }
-            const url = option?.value || node.attrs['source']
+            const url = option?.value ?? node.attrs['source']
             Konva.Image.fromURL(url,
                 (source: Image) => {
                   if(node instanceof  Image) {
@@ -170,12 +170,12 @@ export class KonvaGen {
 
 
     async replaceSingle(node: Node<NodeConfig>, value: any) {
-        this.logger.log(":: Enter replaceSingle params" + value)
-        switch (node.attrs[DEFINED_TYPE_ATTRIBUTE]) {
-            case 'image':
-                await this.reFormSingleImage(node, value)
+        this.logger.log(":: Enter replaceSingle params " + value)
+        switch (node.getClassName()) {
+            case 'Image':
+                await this.reFormSingleImage(node, {value})
                 break
-            case 'text':
+            case 'Text':
                 await this.reFormSingleText(node, value)
                 break
         }
