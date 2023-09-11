@@ -16,9 +16,8 @@ export class GenImageController {
     genImage(@Body() genImageBody: GenImageDTO) {
             Logger.log('Have In')
             const template = genImageBody.template
-            const imageId  = ['shit']
             const obReplace: GenImageReplaceObject[] = genImageBody.options
             const genQuality = genImageBody.genQuality
-            return this.genImageService.genImage(template, imageId, obReplace, genQuality)
+            return this.genImageService.genImage(template, obReplace, genQuality)
     }
 }

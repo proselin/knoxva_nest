@@ -23,9 +23,9 @@ export class GenImageRepository implements GenImageRepositoryInterface {
         return <{ type: string, data: Buffer }>response;
     }
 
-    async genImage(template: string | object, imageId: string[], options: GenImageReplaceObject[], genQuality: GenQuality): Promise<any> {
+    async genImage(template: string | object, options: GenImageReplaceObject[], genQuality: GenQuality): Promise<any> {
         this.logger.log(":: Enter genImage function ")
-        const konvaGen = await this.initTemplate(imageId, template)
+        const konvaGen = await this.initTemplate(template)
         try {
             return Promise.all(options.map(option => this.genOneOptions(option, konvaGen, genQuality)))
         } catch (e) {
@@ -72,14 +72,15 @@ export class GenImageRepository implements GenImageRepositoryInterface {
         })
     }
 
-    async initTemplate(imageId: string[], template: string | object): Promise<KonvaGen> {
+    async initTemplate(template: string | object): Promise<KonvaGen> {
         this.logger.log(":: Enter function initTemplate")
         this.logger.log(":: Template: " + typeof template == "string" ? template : JSON.stringify(template))
         const konvaGen = new KonvaGen(template)
 
-        if (imageId) {
-            await konvaGen.reFormImages(Array.from(new Set(imageId).values()))
-        }
+        // if (imageId) {
+        //     await konvaGen.reFormImages(Array.from(new Set(imageId).values()))
+        // }
+        await konvaGen.reFormImages()
         this.logger.log(":: Complete function initTemplate")
         return konvaGen
     }

@@ -14,11 +14,10 @@ export class GenImageService {
 
     async genImage(
         template: string | object,
-        imageId: string[],
         options: GenImageReplaceObject[],
         genQuality: GenQuality = GenQuality.Normal
     ) {
-        return this.repository.genImage(template, imageId, options, genQuality)
+        return this.repository.genImage(template, options, genQuality)
     }
 
 

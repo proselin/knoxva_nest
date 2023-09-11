@@ -5,6 +5,7 @@ import {GenImageReplaceObject, ToDataUrlConfig, ToImageConfig} from "@gen-image/
 import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
+import {validateEach} from "@nestjs/common/utils/validate-each.util";
 const Konva = require('konva')
 export class KonvaGen {
 
@@ -50,23 +51,25 @@ export class KonvaGen {
         return this.getStage().find(`#${defined}`)
     }
 
-    async reFormImages(imagesId: string[]): Promise<{ [p: string]: ({} | Image)[] }> {
+    async reFormImages(): Promise<({} | Image)[]> {
         this.logger.log(":: Enter Reform Image ")
-        this.logger.log(imagesId)
+        const imagesId  = (this.stage.find('Image') as Image[])
+            .filter(value => !!value?.getAttr('source'))
+        this.logger.log("Image length")
         const imageMatrix = await Promise.all(
-            imagesId.map(value => this.reFormImage(value))
+            imagesId.map(value => this.reFormSingleImage(value))
         )
-        let rs: { [p: string]: ({} | Image)[] } = {}
+        let rs: ({} | Image)[] = []
         imagesId.forEach(
             (image, index) => {
-                rs[image] = imageMatrix[index]
+                rs.push(imageMatrix[index])
             }
         )
         this.logger.log(":: Complete Reform Image " + JSON.stringify(rs))
         return rs
     }
 
-    reFormImage(imageId: string): Promise<({} | Image)[]> {
+    private reFormImage(imageId: string): Promise<({} | Image)[]> {
         const imageEl = this.findIndex(imageId)
 
         if (!imageEl.length) {
@@ -85,9 +88,8 @@ export class KonvaGen {
                 if(node instanceof Text){
                     node.setText(value)
                     node.fontFamily('Arial')
-                    resolve()
                 }
-
+                resolve()
             }
         )
     }

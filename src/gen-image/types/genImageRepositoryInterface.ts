@@ -5,7 +5,6 @@ import {KonvaGen} from "@gen-image/konva-gen";
 export interface GenImageRepositoryInterface {
     genImage(
         template: string | object,
-        imageId: string[],
         options: GenImageReplaceObject[],
         genQuality: GenQuality
     ): Promise<any>
