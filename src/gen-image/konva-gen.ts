@@ -20,7 +20,7 @@ export class KonvaGen {
     }
 
     constructStage(options?: string | object) {
-        this.logger.log(":: Create new KonvaGen ")
+        this.logger.verbose(":: Create new KonvaGen ")
 
 
         if (!options) this.stage = Konva.Node.create({})
@@ -42,20 +42,20 @@ export class KonvaGen {
     }
 
     find(defined: string) {
-        this.logger.log(":: Find elements: " +  defined,)
+        this.logger.verbose(":: Find elements: " +  defined,)
         return this.getStage().find(defined)
     }
 
     findIndex(defined: string) {
-        this.logger.log(":: Find elements by Id: " +  defined,)
+        this.logger.verbose(":: Find elements by Id: " +  defined,)
         return this.getStage().find(`#${defined}`)
     }
 
     async reFormImages(): Promise<({} | Image)[]> {
-        this.logger.log(":: Enter Reform Image ")
+        this.logger.verbose(":: Enter Reform Image ")
         const imagesId  = (this.stage.find('Image') as Image[])
             .filter(value => !!value?.getAttr('source'))
-        this.logger.log("Image length")
+        this.logger.verbose("Image length ", imagesId.length)
         const imageMatrix = await Promise.all(
             imagesId.map(value => this.reFormSingleImage(value))
         )
@@ -65,7 +65,7 @@ export class KonvaGen {
                 rs.push(imageMatrix[index])
             }
         )
-        this.logger.log(":: Complete Reform Image " + JSON.stringify(rs))
+        this.logger.verbose(":: Complete Reform Image " + JSON.stringify(rs))
         return rs
     }
 
@@ -159,8 +159,8 @@ export class KonvaGen {
 
 
     async replaceObject(object: GenImageReplaceObject) {
-        this.logger.log(":: Enter replaceObject function ")
-        this.logger.log(":: Replace params " + JSON.stringify(object))
+        this.logger.verbose(":: Enter replaceObject function ")
+        this.logger.verbose(":: Replace params " + JSON.stringify(object))
         for (const [key, value] of Object.entries(object)) {
             for (const node of this.findIndex(key)) {
                 await this.replaceSingle(node, value);
@@ -170,7 +170,7 @@ export class KonvaGen {
 
 
     async replaceSingle(node: Node<NodeConfig>, value: any) {
-        this.logger.log(":: Enter replaceSingle params " + value)
+        this.logger.verbose(":: Enter replaceSingle params " + value)
         switch (node.getClassName()) {
             case 'Image':
                 await this.reFormSingleImage(node, {value})

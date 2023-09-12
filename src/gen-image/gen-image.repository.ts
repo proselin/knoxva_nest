@@ -5,6 +5,12 @@ import {KonvaGen} from "@gen-image/konva-gen";
 import {HttpException, HttpStatus, Logger} from "@nestjs/common";
 import {writeFile} from "fs";
 import {join} from "node:path";
+// import cluster from "node:cluster";
+import * as process from "process";
+import {AppClusterService} from "../task/app-cluster-service";
+
+const cluster = require("node:cluster");
+const forks = require('os').cpus().length
 
 export class GenImageRepository implements GenImageRepositoryInterface {
     readonly logger = new Logger(GenImageRepository.name)
@@ -24,10 +30,36 @@ export class GenImageRepository implements GenImageRepositoryInterface {
     }
 
     async genImage(template: string | object, options: GenImageReplaceObject[], genQuality: GenQuality): Promise<any> {
-        this.logger.log(":: Enter genImage function ")
+        this.logger.verbose(":: Enter genImage function ")
         const konvaGen = await this.initTemplate(template)
+
+        // if (cluster.isPrimary) {
+        //     for (let i = 0; i < forks; i++) {
+        //         cluster.fork()
+        //     }
+        // } else {
+        //     this.logger.verbose(`::Start GenImage:: ProcessID: ${process.pid}`)
+        //     await this.start(konvaGen, options, genQuality)
+        // }
+
+        AppClusterService.clusterRise(
+            async () => {
+                this.logger.verbose(`::Start GenImage:: ProcessID: ${process.pid}`)
+                await this.start(konvaGen, options, genQuality)
+            }, true
+        )
+    }
+
+
+    async start(konvaGen: KonvaGen, options: GenImageReplaceObject[], genQuality: GenQuality) {
         try {
-            return Promise.all(options.map(option => this.genOneOptions(option, konvaGen, genQuality)))
+            // this.logger.log("ClusterFileLenght:: ", clusterFile.length)
+            this.logger.log(":: Process ID :: ", cluster.worker!.id)
+
+            const clusterFile = options
+                .filter((_, index) => index % forks == cluster.worker!.id - 1)
+
+            await Promise.all(clusterFile.map(option => this.genOneOptions(option, konvaGen, genQuality)))
         } catch (e) {
             this.logger.error(":: Error genImage function ")
             this.logger.error(e)
@@ -46,22 +78,22 @@ export class GenImageRepository implements GenImageRepositoryInterface {
     }
 
     genOneOptions(option: GenImageReplaceObject, konvaGen: KonvaGen, genQuality: GenQuality): Promise<any> {
-        this.logger.log(":: Enter genOneOptions function ")
-        this.logger.log(":: GenQuality " + genQuality)
-        this.logger.log(":: options " + JSON.stringify(option))
+        this.logger.verbose(":: Enter genOneOptions function ")
+        this.logger.verbose(":: GenQuality " + genQuality)
+        this.logger.verbose(":: options " + JSON.stringify(option))
         return new Promise(async (resolve, reject) => {
             await konvaGen.replaceObject(option)
             konvaGen.draw()
             const dataUrl = konvaGen.toDataUrl(genQuality)
             try {
-                this.logger.log(":: genOneOptions DataUrl success ")
+                this.logger.verbose(":: genOneOptions DataUrl success ")
                 const response =
                     <{ type: string, data: Buffer }>
                         this.decodeBase64Image(dataUrl)
                 const filePath = this.genNewImagePath(response.type)
                 await this.writeFile(filePath, response.data).then(
                     () => {
-                        this.logger.log(":: genOneOptions result at: ", filePath)
+                        this.logger.log(":: SaveFile result at : " + filePath),
                         resolve(filePath)
                     },
                 )
@@ -73,15 +105,11 @@ export class GenImageRepository implements GenImageRepositoryInterface {
     }
 
     async initTemplate(template: string | object): Promise<KonvaGen> {
-        this.logger.log(":: Enter function initTemplate")
-        this.logger.log(":: Template: " + typeof template == "string" ? template : JSON.stringify(template))
+        this.logger.verbose(":: Enter function initTemplate")
+        this.logger.verbose(":: Template: " + typeof template == "string" ? template : JSON.stringify(template))
         const konvaGen = new KonvaGen(template)
-
-        // if (imageId) {
-        //     await konvaGen.reFormImages(Array.from(new Set(imageId).values()))
-        // }
         await konvaGen.reFormImages()
-        this.logger.log(":: Complete function initTemplate")
+        this.logger.verbose(":: Complete function initTemplate")
         return konvaGen
     }
 
