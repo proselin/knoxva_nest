@@ -25,3 +25,5 @@ export type GenImageReplaceObject = {
     qr: string,
     [p: string]: string
 }
+
+export type DecodeBase64Response = { type: string, data: Buffer }

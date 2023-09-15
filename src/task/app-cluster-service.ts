@@ -1,14 +1,15 @@
 // import * as cluster from 'node:cluster';
 import * as os from 'os';
 import {Injectable, Logger} from '@nestjs/common';
-const cluster =  require('cluster');
+const cluster =  require('node:cluster');
 
-const numCPUs = os.cpus().length;
+// const numCPUs = os.cpus().length;
+const numCPUs = 1
 @Injectable()
 export class AppClusterService {
     static logger = new Logger(AppClusterService.name)
-    static clusterRise(callback: Function, ignoreMain = false): void {
-        if(cluster.isPrimary && !ignoreMain){
+    static clusterRise(callback: Function): void {
+        if(cluster.isPrimary){
             AppClusterService.logger.verbose(`Master server started on ${process.pid}`);
             for (let i = 0; i < numCPUs; i++) {
                 cluster.fork();

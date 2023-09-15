@@ -1,6 +1,6 @@
 import {NestFactory} from '@nestjs/core';
 import {GenImageModule} from '@gen-image/gen-image.module';
-import {ValidationPipe} from "@nestjs/common";
+import {Logger, ValidationPipe} from "@nestjs/common";
 import {join} from 'path';
 import {AppClusterService} from "./task/app-cluster-service";
 
@@ -12,6 +12,10 @@ async function bootstrap() {
       new ValidationPipe()
   )
   app.use(express.static(join(__dirname, 'assets')));
-  await app.listen(3000);
+
+  app.listen(3000).then(
+      () => Logger.log(`App start at port {3000} | http://localhost:3000`, 'bootstrap')
+  );
 }
-AppClusterService.clusterRise(bootstrap)
+bootstrap()
+// AppClusterService.clusterRise(bootstrap)
