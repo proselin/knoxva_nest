@@ -1,12 +1,12 @@
 import {NestFactory} from '@nestjs/core';
-import {GenImageModule} from '@gen-image/gen-image.module';
 import {ValidationPipe} from "@nestjs/common";
 import {join} from 'path';
+import { AppModule } from './app.module';
 
 const express = require('express')
 
 async function bootstrap() {
-  const app = await NestFactory.create(GenImageModule)
+  const app = await NestFactory.create(AppModule)
   app.useGlobalPipes(
       new ValidationPipe()
   )

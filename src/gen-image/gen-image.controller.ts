@@ -1,23 +1,37 @@
-import {Body, Controller, Get, Logger, Res} from "@nestjs/common";
-import { GenImageService } from "./gen-image.service";
-import testJson from "@assets/json/test-json";
+import {Body, Controller, Get, Logger, Query} from "@nestjs/common";
+import {GenImageService} from "./gen-image.service";
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
-import { GenImageDTO } from "./dtos/genImage.dto";
+import {GenImageDTO} from "./dtos/genImage.dto";
+import * as console from "console";
+
+const fetch = require("node-fetch")
+const fs = require("fs");
+
 
 @Controller('/gen')
 export class GenImageController {
 
+    logger = new Logger(GenImageController.name)
+
     constructor(private genImageService: GenImageService) {
-        
+
     }
 
 
     @Get()
     genImage(@Body() genImageBody: GenImageDTO) {
-            Logger.log('Have In')
-            const template = genImageBody.template
-            const obReplace: GenImageReplaceObject[] = genImageBody.options
-            const genQuality = genImageBody.genQuality
-            return this.genImageService.genImage(template, obReplace, genQuality)
+        const template = genImageBody.template
+        const obReplace: GenImageReplaceObject[] = genImageBody.options
+        const genQuality = genImageBody.genQuality
+        this.logger.log("Đang gen ", obReplace.length)
+        return this.genImageService.genImage(template, obReplace, genQuality)
+    }
+
+    @Get('/download')
+    async download(@Query('url') url: string) {
+        const response = await fetch(url)
+
+        const buffer = Buffer.from(  await response.arrayBuffer())
+        console.log("OKE")
     }
 }

@@ -1,12 +1,15 @@
 import {Logger} from "@nestjs/common";
 import {Node, NodeConfig} from "konva/lib/Node";
-import {DEFINED_TYPE_ATTRIBUTE, GenQuality} from "@gen-image/utils/constant";
+import {GenQuality} from "@gen-image/utils/constant";
 import {GenImageReplaceObject, ToDataUrlConfig, ToImageConfig} from "@gen-image/types/genImage";
 import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
-import {validateEach} from "@nestjs/common/utils/validate-each.util";
+import axios from "axios";
+import e from "express";
+
 const Konva = require('konva')
+
 export class KonvaGen {
 
     private readonly logger = new Logger(KonvaGen.name)
@@ -14,9 +17,10 @@ export class KonvaGen {
 
 
     constructor(
-        options?: string | object
+        options?: any
     ) {
-        this.constructStage(options)
+        if (options instanceof Stage) this.stage = options
+        else this.constructStage(options)
     }
 
     constructStage(options?: string | object) {
@@ -42,76 +46,63 @@ export class KonvaGen {
     }
 
     find(defined: string) {
-        this.logger.log(":: Find elements: " +  defined,)
+        this.logger.log(":: Find elements: " + defined,)
         return this.getStage().find(defined)
     }
 
     findIndex(defined: string) {
-        this.logger.log(":: Find elements by Id: " +  defined,)
+        this.logger.log(":: Find elements by Id: " + defined,)
         return this.getStage().find(`#${defined}`)
     }
 
-    async reFormImages(): Promise<({} | Image)[]> {
+    async reFormImages(replaceOb: GenImageReplaceObject[]) {
         this.logger.log(":: Enter Reform Image ")
-        const imagesId  = (this.stage.find('Image') as Image[])
+        const imagesId = (this.stage.find('Image') as Image[])
             .filter(value => !!value?.getAttr('source'))
-        this.logger.log("Image length")
-        const imageMatrix = await Promise.all(
+            .filter(value => !(value.getAttr('id') in replaceOb[0]))
+        this.logger.log("Image length", imagesId.length)
+        await Promise.all(
             imagesId.map(value => this.reFormSingleImage(value))
         )
-        let rs: ({} | Image)[] = []
-        imagesId.forEach(
-            (image, index) => {
-                rs.push(imageMatrix[index])
-            }
-        )
-        this.logger.log(":: Complete Reform Image " + JSON.stringify(rs))
-        return rs
-    }
-
-    private reFormImage(imageId: string): Promise<({} | Image)[]> {
-        const imageEl = this.findIndex(imageId)
-
-        if (!imageEl.length) {
-            throw new Error("ID did not exists!")
-        }
-
-        return Promise.all(imageEl.map(value => this.reFormSingleImage(value)))
     }
 
     reFormSingleText(node: Node<NodeConfig>, value: string, isStrict: boolean = false) {
-        return new Promise<void>(
-            (resolve, reject) => {
-                if (!node.attrs['text'] ) {
-                    !isStrict ? resolve() : reject()
-                }
-                if(node instanceof Text){
-                    node.setText(value)
-                    node.fontFamily('Arial')
-                }
-                resolve()
-            }
-        )
+
+        if (node instanceof Text) {
+            node.setText(value)
+            node.fontFamily('Arial')
+        }
+
     }
 
-    private reFormSingleImage(node: Node<NodeConfig>, option?: { value?: string, isStrict?: boolean }) {
-        return new Promise<{} | Image>((resolve, reject) => {
+    private reFormSingleImage(node: Node<NodeConfig>, value?: string) {
 
-            if (!node.attrs['source'] && !option?.value) {
-                !option?.isStrict ? resolve({}) : reject()
+        return new Promise<void>((resolve, reject) => {
+            if (!node.attrs['source'] && !value) {
+                reject()
+                return
             }
-            const url = option?.value ?? node.attrs['source']
-            Konva.Image.fromURL(url,
-                (source: Image) => {
-                  if(node instanceof  Image) {
-                      node.image(source.getAttr('image'))
-                  }
-                    resolve(Image)
-                },
-                (error: any) => {
-                    reject(error)
-                })
+            const mime = 'image/png';
+            const encoding = 'base64';
+
+            const url = value ?? node.attrs['source']
+            this.bufferImage(url).then((buffer) => {
+
+                    const img = Konva.Util.createImageElement()
+                    img.onload = (event) => {
+                        (node as Image).image(img)
+                        resolve()
+                    }
+                    img.onerror = (err) => {
+                        reject(err)
+                    }
+                    img.crossOrigin = 'Anonymous';
+                    img.src = 'data:' + mime + ';' + encoding + ',' + buffer.toString(encoding);
+                }
+            ).catch(err => reject(err))
         })
+
+
     }
 
     toDataUrl(quality: GenQuality, option?: ToDataUrlConfig) {
@@ -145,13 +136,6 @@ export class KonvaGen {
         }
     }
 
-    setSize([width, height]: [number, number]) {
-        if (!this.stage) this.stage = Konva.Node.create({width, height,});
-        if (this.stage) {
-            this.stage.attrs.width = width
-            this.stage.attrs.height = height
-        }
-    }
 
     draw() {
         return this.stage.draw()
@@ -162,9 +146,9 @@ export class KonvaGen {
         this.logger.log(":: Enter replaceObject function ")
         this.logger.log(":: Replace params " + JSON.stringify(object))
         for (const [key, value] of Object.entries(object)) {
-            for (const node of this.findIndex(key)) {
-                await this.replaceSingle(node, value);
-            }
+            const node = this.findIndex(key)?.[0]
+            if (!node) continue;
+            await this.replaceSingle(node, value);
         }
     }
 
@@ -173,14 +157,29 @@ export class KonvaGen {
         this.logger.log(":: Enter replaceSingle params " + value)
         switch (node.getClassName()) {
             case 'Image':
-                await this.reFormSingleImage(node, {value})
-                break
+                return this.reFormSingleImage(node, value)
             case 'Text':
-                await this.reFormSingleText(node, value)
-                break
+                return this.reFormSingleText(node, value)
         }
     }
 
+    private bufferImage(url) {
+        return axios
+            .get(url, {
+                responseType: 'arraybuffer'
+            }).then(
+                response => {
+                    return Buffer.from(response.data);
+                }
+            );
+    }
 
+    buildImages() {
+        this.getStage().find('Image').forEach(
+            node => {
+                // if (!!node.getAttr('image') || !node.getAttr('source')) return
+                // node.setAttr('src', node.getAttr('source'))
+            })
+    }
 }
 
