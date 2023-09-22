@@ -6,7 +6,6 @@ import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
 import axios from "axios";
-import e from "express";
 
 const Konva = require('konva')
 
@@ -72,6 +71,7 @@ export class KonvaGen {
             node.setText(value)
             node.fontFamily('Arial')
         }
+        return Promise.resolve()
 
     }
 
@@ -82,24 +82,14 @@ export class KonvaGen {
                 reject()
                 return
             }
-            const mime = 'image/png';
-            const encoding = 'base64';
 
             const url = value ?? node.attrs['source']
-            this.bufferImage(url).then((buffer) => {
-
-                    const img = Konva.Util.createImageElement()
-                    img.onload = (event) => {
-                        (node as Image).image(img)
-                        resolve()
-                    }
-                    img.onerror = (err) => {
-                        reject(err)
-                    }
-                    img.crossOrigin = 'Anonymous';
-                    img.src = 'data:' + mime + ';' + encoding + ',' + buffer.toString(encoding);
-                }
-            ).catch(err => reject(err))
+            Konva.Image.fromURL(url, (image) => {
+                node.setAttr('image', image.image())
+                resolve()
+                },
+                err => reject(err)
+            )
         })
 
 
@@ -142,18 +132,18 @@ export class KonvaGen {
     }
 
 
-    async replaceObject(object: GenImageReplaceObject) {
+     replaceObject(object: GenImageReplaceObject) {
         this.logger.log(":: Enter replaceObject function ")
         this.logger.log(":: Replace params " + JSON.stringify(object))
-        for (const [key, value] of Object.entries(object)) {
+        return Promise.all(Object.entries(object).map(([key, value]) => {
             const node = this.findIndex(key)?.[0]
-            if (!node) continue;
-            await this.replaceSingle(node, value);
-        }
+            if (!node) return;
+            return this.replaceSingle(node, value);
+        }))
     }
 
 
-    async replaceSingle(node: Node<NodeConfig>, value: any) {
+     replaceSingle(node: Node<NodeConfig>, value: any) {
         this.logger.log(":: Enter replaceSingle params " + value)
         switch (node.getClassName()) {
             case 'Image':
@@ -163,23 +153,5 @@ export class KonvaGen {
         }
     }
 
-    private bufferImage(url) {
-        return axios
-            .get(url, {
-                responseType: 'arraybuffer'
-            }).then(
-                response => {
-                    return Buffer.from(response.data);
-                }
-            );
-    }
-
-    buildImages() {
-        this.getStage().find('Image').forEach(
-            node => {
-                // if (!!node.getAttr('image') || !node.getAttr('source')) return
-                // node.setAttr('src', node.getAttr('source'))
-            })
-    }
 }
 
