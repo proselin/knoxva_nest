@@ -1,11 +1,16 @@
-import {GenImageRepository} from "@gen-image/gen-image.repository";
-import {GenImageReplaceObject} from "@gen-image/types/genImage";
-import {GenQuality} from "@gen-image/utils/constant";
-import {Inject, Injectable, Logger} from "@nestjs/common";
-import {KonvaGen} from "./konva-gen";
-import {MINIO_CONNECTION} from "nestjs-minio";
-import {Client} from 'minio';
-import {randomUUID} from "crypto";
+import { GenImageRepository } from "@gen-image/gen-image.repository";
+import { GenImageReplaceObject } from "@gen-image/types/genImage";
+import { GenQuality } from "@gen-image/utils/constant";
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { KonvaGen } from "./konva-gen";
+import { MINIO_CONNECTION } from "nestjs-minio";
+import { Client } from 'minio';
+import { randomUUID } from "crypto";
+import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
+import * as process from "process";
+import { Image } from "konva/lib/shapes/Image";
+import { Queue, QueueEvent, QueueWorkerCallback } from "lib/queue";
+import * as console from "console";
 
 
 @Injectable()
@@ -13,10 +18,19 @@ export class GenImageService {
     private readonly logger = new Logger(GenImageService.name)
     repository = new GenImageRepository()
 
+    queue = new Queue({
+        concurrency: 10,
+        autostart: true,
+        results: []
+    })
+
 
     constructor(
+        private eventEmitter: EventEmitter2,
         @Inject(MINIO_CONNECTION) private readonly minioClient: Client
     ) {
+
+
     }
 
 
@@ -25,46 +39,84 @@ export class GenImageService {
         options: GenImageReplaceObject[],
         genQuality: GenQuality = GenQuality.Normal
     ) {
-        return this.handleEvent({template, options, genQuality})
+        return this.handleEvent({ template, options, genQuality })
     }
 
-    handleEvent({template, options, genQuality}: any) {
+    handleEvent({ template, options, genQuality }: any) {
         this.logger.log(":: Enter genImage function ")
+        const uidMain = randomUUID()
+        console.time(uidMain)
+        // return new Promise<any[] | null>((resolve) => {
         this.repository.initTemplate(template, options).then((konvaGen) => {
-                try {
-                    // return Promise.all(
-                    options.forEach((option) => {
+            try {
+                // return Promise.all(
+                options.forEach((option) => {
+
+                    this.queue.push(callback => {
+
                         const uid = randomUUID()
                         console.time(uid)
                         return this.repository.genOneOptions(option, new KonvaGen(konvaGen.getStage()), genQuality)
                             .then((result) => {
-
-                                const metaData: Parameters<typeof this.minioClient.putObject>[3] = {
-                                    "Content-Encoding": 'base64',
-                                    "Content-Type": result?.type
-                                }
-                                return this.minioClient.putObject(
-                                    'tdh.genarate-ticket',
-                                    `TDH-${uid}.png`,
-                                    result?.data!,
-                                    metaData,
-                                ).then(
-                                    (res) => {
-                                        this.logger.log(res)
-                                        console.timeEnd(uid)
-                                        return res
-                                    })
-
+                                return this.saveTicket({ konvaGen: result, genQuality, uid }, callback)
+                                // this.eventEmitter.emit('order.saveticket', {konvaGen: result, genQuality, uid})
                             });
                     })
-                    // )
-                } catch (e) {
-                    this.logger.error(":: Error genImage function ")
-                    this.logger.error(e)
-                    // throw new HttpException(e, HttpStatus.INTERNAL_SERVER_ERROR)
+                })
+                // )
+            } catch (e) {
+                this.logger.error(":: Error genImage function ")
+                this.logger.error(e)
+                // throw new HttpException(e, HttpStatus.INTERNAL_SERVER_ERROR)
+            }
+        }
+        )
+        this.queue.addEventListener("end", (result) => {
+            this.logger.warn("Done Request")
+            this.queue.removeEventListener("end", () =>  {})
+            console.timeEnd(uidMain)
+            // resolve(this.queue.results)
+        })
+        // })
+
+    }
+
+
+    @OnEvent('order.saveticket')
+    pushQueue(input: { konvaGen: KonvaGen, genQuality: GenQuality, uid: string }) {
+        this.queue.push(callback => {
+            this.saveTicket(input, callback)
+        })
+    }
+
+    saveTicket({ konvaGen, genQuality, uid }: {
+        konvaGen: KonvaGen,
+        genQuality: GenQuality,
+        uid: string
+    }, callBack: QueueWorkerCallback | undefined) {
+
+        return konvaGen.toImage(genQuality).then(
+            (response: Image) => {
+                const result = <{ type: string, data: Buffer }>this.repository.decodeBase64Image(response['src'])
+
+                const metaData: Parameters<typeof this.minioClient.putObject>[3] = {
+                    "Content-Encoding": 'base64',
+                    "Content-Type": result?.type
                 }
+                return new Promise((resolve, reject) => {
+                    this.minioClient.putObject(
+                        'tdh.genarate-ticket',
+                        `TDH-${uid}.png`,
+                        result?.data!,
+                        metaData,
+                    ).then(
+                        (res) => {
+                            this.logger.log(res)
+                            console.timeEnd(uid)
+                            resolve(`TDH-${uid}.png`)
+                        })
+                })
             }
         )
-
     }
 }

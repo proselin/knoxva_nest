@@ -10,7 +10,13 @@ import {join} from "node:path";
 export class GenImageRepository {
 
 
-    readonly logger = new Logger(GenImageRepository.name)
+    private _logger = new Logger(GenImageRepository.name)
+    logger = {
+        log: (...arg: any[]) => {},
+        warn: (...arg: any[]) => {},
+        error: (...arg: any[]) => this._logger.error(arg),
+
+    }
 
     decodeBase64Image(dataString: string): Error | { type: string; data: Buffer } {
         const matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)!;
@@ -37,10 +43,7 @@ export class GenImageRepository {
         )
     }
 
-     genOneOptions(option: GenImageReplaceObject, konvaGen: KonvaGen, genQuality: GenQuality): Promise<{
-        type: string,
-        data: Buffer
-    } | undefined> {
+     genOneOptions(option: GenImageReplaceObject, konvaGen: KonvaGen, genQuality: GenQuality): Promise<KonvaGen> {
         this.logger.log(":: Enter genOneOptions function ")
         this.logger.log(":: GenQuality " + genQuality)
         this.logger.log(":: options " + JSON.stringify(option))
@@ -49,8 +52,7 @@ export class GenImageRepository {
 
         return konvaGen.replaceObject(option).then(() => {
             konvaGen.draw()
-
-            return <{ type: string, data: Buffer }>this.decodeBase64Image(konvaGen.toDataUrl(genQuality))
+            return konvaGen
         })
     }
 

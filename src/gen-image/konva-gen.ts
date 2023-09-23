@@ -1,17 +1,22 @@
 import {Logger} from "@nestjs/common";
 import {Node, NodeConfig} from "konva/lib/Node";
-import {GenQuality} from "@gen-image/utils/constant";
-import {GenImageReplaceObject, ToDataUrlConfig, ToImageConfig} from "@gen-image/types/genImage";
 import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
-import axios from "axios";
+import { GenImageReplaceObject, ToDataUrlConfig, ToImageConfig } from "./types/genImage";
+import { GenQuality } from "./utils/constant";
 
 const Konva = require('konva')
 
 export class KonvaGen {
 
-    private readonly logger = new Logger(KonvaGen.name)
+    private _logger = new Logger(KonvaGen.name)
+    logger = {
+        log: (...arg: any[]) => {},
+        warn: (...arg: any[]) => {},
+        error: (...arg: any[]) => this._logger.error(arg),
+
+    }
     private stage: Stage;
 
 

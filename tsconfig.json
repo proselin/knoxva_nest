@@ -19,7 +19,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@assets/*": ["src/assets/*"],
-      "@gen-image/*": ["src/gen-image/*"]
+      "@gen-image/*": ["src/gen-image/*"],
+      "@lib": ["lib/*"]
     },
     "lib": [
       "es2021"

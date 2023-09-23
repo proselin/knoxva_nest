@@ -19,19 +19,20 @@ export class GenImageController {
 
 
     @Get()
-    genImage(@Body() genImageBody: GenImageDTO) {
+    async genImage(@Body() genImageBody: GenImageDTO) {
         const template = genImageBody.template
         const obReplace: GenImageReplaceObject[] = genImageBody.options
         const genQuality = genImageBody.genQuality
         this.logger.log("Đang gen ", obReplace.length)
-        return this.genImageService.genImage(template, obReplace, genQuality)
+        return await this.genImageService.genImage(template, obReplace, genQuality)
+
     }
 
     @Get('/download')
     async download(@Query('url') url: string) {
         const response = await fetch(url)
 
-        const buffer = Buffer.from(  await response.arrayBuffer())
+        const buffer = Buffer.from(await response.arrayBuffer())
         console.log("OKE")
     }
 }
