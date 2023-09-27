@@ -16,8 +16,6 @@ services:
       target: production
     volumes:
       - .:/usr/src/app
-    env_file:
-      - .env
     # Run a command against the development stage of the image
 
     ports:
