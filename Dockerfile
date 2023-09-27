@@ -1,3 +1,5 @@
+RUN apt-get install python3
+
 ###################
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
