@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  redis: # Name of container
+    image: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+    networks:
+      - local
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      # Only will build development stage from our dockerfile
+      target: production
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - .env
+    # Run a command against the development stage of the image
+
+    ports:
+      - 3000:3000
+    depends_on:
+      - redis
+    command:
+      - node ./dist/main.js
+volumes:
+  redis:
+    driver: local
+networks:
+  local:

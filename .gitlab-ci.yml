@@ -1,0 +1,50 @@
+# do not use "latest" here, if you want this to work in the future
+image: docker:latest
+
+# Môi trường bên trong image docker ko thể nào tự động kết nối tới docker daemon (docker server) và cần tới docker dind để chạy command
+services:
+  - docker:dind
+
+# Khai báo các job trong state
+stages:
+  - build
+  - deploy
+
+# Khai báo các run script trước khi tiến hành chạy job
+# Ở đây đang khai báo toàn cục cho nên nó sẽ áp dụng cho tất cả các job
+before_script:
+  - docker version
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - apk update && apk add openssh-client bash
+
+build:
+  stage: build
+  only:
+    - main
+    - develop
+    - uat
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+    # - docker compose up -d
+
+deploy:
+  stage: deploy
+  only:
+    - release
+  script:
+    - eval $(ssh-agent -s)
+    - bash -c 'ssh-add <(echo "$SSH_PRIVATE_KEY")'
+    - mkdir -p ~/.ssh
+    - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - >
+      ssh $SSH_USER@$SSH_SERVER_IP
+      "docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY};
+      cd ${PATH_TO_PROJECT};
+      docker-compose down;
+      docker pull ${CI_REGISTRY_IMAGE}:latest;
+      docker-compose up -d;
+      docker image prune -f;"
