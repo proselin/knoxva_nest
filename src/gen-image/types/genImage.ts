@@ -1,3 +1,4 @@
+import {GenQuality} from "@gen-image/utils/constant";
 
 export type ToImageConfig = ExportConfig & {
     callback?: (img: any) => void;
@@ -24,4 +25,10 @@ type ExportConfig = {
 export type GenImageReplaceObject = {
     qr: string,
     [p: string]: string
+}
+
+export type InputGenerateImageParams = {
+    template: string
+    options: GenImageReplaceObject[]
+    genQuality: GenQuality,
 }

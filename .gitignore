@@ -36,3 +36,6 @@ lerna-debug.log*
 
 #image gen
 src/assets/images_gen/*.png
+
+#package-lock
+package-lock.json

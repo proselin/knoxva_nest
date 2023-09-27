@@ -1,12 +1,13 @@
 import {KonvaGen} from "@gen-image/konva-gen";
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
 import {GenQuality} from "@gen-image/utils/constant";
-import {Logger} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 import * as console from "console";
 import {randomUUID} from "crypto";
 import {join} from "node:path";
 
 
+@Injectable()
 export class GenImageRepository {
 
 

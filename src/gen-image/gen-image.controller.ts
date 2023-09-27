@@ -1,8 +1,9 @@
 import {Body, Controller, Get, Logger, Query} from "@nestjs/common";
-import {GenImageService} from "./gen-image.service";
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
 import {GenImageDTO} from "./dtos/genImage.dto";
 import * as console from "console";
+import {GenImageConsumer} from "@gen-image/gen-image.consumer";
+import {GenImageProducer} from "@gen-image/gen-image.producer";
 
 const fetch = require("node-fetch")
 const fs = require("fs");
@@ -13,7 +14,7 @@ export class GenImageController {
 
     logger = new Logger(GenImageController.name)
 
-    constructor(private genImageService: GenImageService) {
+    constructor(private genImageProducer: GenImageProducer) {
 
     }
 
@@ -23,9 +24,7 @@ export class GenImageController {
         const template = genImageBody.template
         const obReplace: GenImageReplaceObject[] = genImageBody.options
         const genQuality = genImageBody.genQuality
-        this.logger.log("Đang gen ", obReplace.length)
-        return await this.genImageService.genImage(template, obReplace, genQuality)
-
+        await this.genImageProducer.addJob(template, obReplace, genQuality)
     }
 
     @Get('/download')

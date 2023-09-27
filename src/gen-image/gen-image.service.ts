@@ -6,33 +6,21 @@ import { KonvaGen } from "./konva-gen";
 import { MINIO_CONNECTION } from "nestjs-minio";
 import { Client } from 'minio';
 import { randomUUID } from "crypto";
-import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
-import * as process from "process";
 import { Image } from "konva/lib/shapes/Image";
-import { Queue, QueueEvent, QueueWorkerCallback } from "lib/queue";
 import * as console from "console";
 
 
 @Injectable()
 export class GenImageService {
     private readonly logger = new Logger(GenImageService.name)
-    repository = new GenImageRepository()
 
-    queue = new Queue({
-        concurrency: 10,
-        autostart: true,
-        results: []
-    })
 
 
     constructor(
-        private eventEmitter: EventEmitter2,
+        private repository: GenImageRepository,
         @Inject(MINIO_CONNECTION) private readonly minioClient: Client
     ) {
-
-
     }
-
 
     async genImage(
         template: string,
@@ -46,54 +34,38 @@ export class GenImageService {
         this.logger.log(":: Enter genImage function ")
         const uidMain = randomUUID()
         console.time(uidMain)
-        // return new Promise<any[] | null>((resolve) => {
-        this.repository.initTemplate(template, options).then((konvaGen) => {
-            try {
-                // return Promise.all(
-                options.forEach((option) => {
-
-                    this.queue.push(callback => {
-
+        return this.repository.initTemplate(template, options).then(
+            (konvaGen) => {
+                try {
+                    return Promise.all(options.map((option) => {
                         const uid = randomUUID()
                         console.time(uid)
                         return this.repository.genOneOptions(option, new KonvaGen(konvaGen.getStage()), genQuality)
                             .then((result) => {
-                                return this.saveTicket({ konvaGen: result, genQuality, uid }, callback)
-                                // this.eventEmitter.emit('order.saveticket', {konvaGen: result, genQuality, uid})
+                                return this.saveTicket({ konvaGen: result, genQuality, uid }).then(
+                                    () => { result.getStage().destroy() }
+                                )
                             });
-                    })
-                })
-                // )
-            } catch (e) {
-                this.logger.error(":: Error genImage function ")
-                this.logger.error(e)
-                // throw new HttpException(e, HttpStatus.INTERNAL_SERVER_ERROR)
-            }
-        }
-        )
-        this.queue.addEventListener("end", (result) => {
-            this.logger.warn("Done Request")
-            this.queue.removeEventListener("end", () =>  {})
-            console.timeEnd(uidMain)
-            // resolve(this.queue.results)
-        })
-        // })
+                    }))
 
+                } catch (e) {
+                    this.logger.error(":: Error genImage function ")
+                    this.logger.error(e)
+                }
+            })
     }
 
 
-    @OnEvent('order.saveticket')
+    // @OnEvent('order.saveticket')
     pushQueue(input: { konvaGen: KonvaGen, genQuality: GenQuality, uid: string }) {
-        this.queue.push(callback => {
-            this.saveTicket(input, callback)
-        })
+        this.saveTicket(input)
     }
 
     saveTicket({ konvaGen, genQuality, uid }: {
         konvaGen: KonvaGen,
         genQuality: GenQuality,
         uid: string
-    }, callBack: QueueWorkerCallback | undefined) {
+    }, callBack?: Function) {
 
         return konvaGen.toImage(genQuality).then(
             (response: Image) => {

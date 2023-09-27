@@ -1,12 +1,25 @@
-import {Global, Module} from "@nestjs/common";
+import {Module} from "@nestjs/common";
 import {GenImageController} from "./gen-image.controller";
 import {GenImageService} from "./gen-image.service";
-import {EventEmitterModule} from "@nestjs/event-emitter";
+import {BullModule} from "@nestjs/bull";
+import {GenImageRepository} from "@gen-image/gen-image.repository";
+import {GenImageConsumer} from "@gen-image/gen-image.consumer";
+import {GenImageProducer} from "./gen-image.producer";
 
 
 @Module({
-  imports: [EventEmitterModule.forRoot()],
-  controllers: [GenImageController],
-  providers: [GenImageService]
+    imports: [
+        BullModule.registerQueue({
+            name: 'generate-ticket',
+        })
+    ],
+    controllers: [GenImageController],
+    providers: [
+        GenImageService,
+        GenImageRepository,
+        GenImageProducer,
+        GenImageConsumer
+    ]
 })
-export class GenImageModule {}
+export class GenImageModule {
+}
