@@ -28,15 +28,5 @@ export class GenImageProducer {
                 genQuality
             })
         } while (options.length > 0)
-        
-        // Promise.all(options.map(
-        //     (value) => {
-        //         return this.generateImageQueue.add({
-        //             template,
-        //             options: [value],
-        //             genQuality
-        //         })
-        //     }
-        // ))
     }
 }
