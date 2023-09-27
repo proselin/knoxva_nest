@@ -12,15 +12,11 @@ WORKDIR /usr/src/app
 # Copying this first prevents re-running npm install on every code change.
 COPY --chown=node:node package*.json ./
 
-COPY src/database ./prisma/
 # Install app dependencies using the `npm ci` command instead of `npm install`
 RUN npm ci
 
 # Bundle app source
 COPY --chown=node:node . .
-
-# Generate Prisma database client code
-RUN npm run prisma:generate
 
 # Use the node user from the image (instead of the root user)
 USER node
@@ -44,13 +40,10 @@ COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modul
 COPY --chown=node:node . .
 
 # Run the build command which creates the production bundle
-RUN npm run build
+RUN npm run nest:build
 
 # Set NODE_ENV environment variable
 ENV NODE_ENV production
-
-#generat prisma
-RUN npx prisma generate
 
 # Running `npm ci` removes the existing node_modules directory.
 # Passing in --only=production ensures that only the production dependencies are installed.
