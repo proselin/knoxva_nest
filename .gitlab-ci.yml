@@ -30,8 +30,8 @@ build:
   cache:
     <<: *global_cache
     policy: push
-  tags:
-    - local_runner
+  # tags:
+  #   - local_runner
 
 deploy:
   stage: deploy_stage
@@ -41,5 +41,5 @@ deploy:
   cache:
     <<: *global_cache
     policy: pull
-  tags:
-    - local_runner
+  # tags:
+  #   - local_runner
