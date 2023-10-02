@@ -1,8 +1,5 @@
 image: node:18-alpine
 
-before_script: 
-  - apt-get install python3
-
 stages:
   - build_stage
   - deploy_stage
@@ -29,6 +26,7 @@ build:
   stage: build_stage
   extends: .base-rules
   script:
+    - apt-get install python3
     - "node --version"
     - npm i
     - npm run nest:build
