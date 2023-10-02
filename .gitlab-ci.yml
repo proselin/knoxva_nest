@@ -1,51 +1,51 @@
-image: node:18-alpine
+# do not use "latest" here, if you want this to work in the future
+image: docker:latest
 
+# Môi trường bên trong image docker ko thể nào tự động kết nối tới docker daemon (docker server) và cần tới docker dind để chạy command
+services:
+  - docker:dind
+
+# Khai báo các job trong state
 stages:
-  - build_stage
-  - deploy_stage
+  - build
+  - deploy
 
-.base-rules:
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
-      when: always
-    - if: '$CI_COMMIT_BRANCH == "uat"'
-      when: always
-    # - if: '$CI_PIPELINE_SOURCE == "push"'
-    #   when: always
-    - if: $CI_COMMIT_TAG
-      when: never
-
-cache: &global_cache
-  key: $CI_COMMIT_REF_SLUG
-  policy: pull-push
-  paths:
-    - node_modules/
-    - package-lock.json
+# Khai báo các run script trước khi tiến hành chạy job
+# Ở đây đang khai báo toàn cục cho nên nó sẽ áp dụng cho tất cả các job
+before_script:
+  - docker version
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - apk update && apk add openssh-client bash
+  - apk add python python-dev python pip
 
 build:
-  stage: build_stage
-  extends: .base-rules
+  stage: build
+  only:
+    - main
+    - develop
+    - uat
   script:
-    - "apt-get install python3"
-    - "node --version"
-    - npm i
-    - npm run nest:build
-  cache:
-    <<: *global_cache
-    policy: push
-  # tags:
-  #   - local_runner
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+    # - docker compose up -d
 
 deploy:
-  stage: deploy_stage
-  extends: .base-rules
+  stage: deploy
+  only:
+    - release
   script:
-    - "pm2 start ecosystem.config.js"
-  cache:
-    <<: *global_cache
-    policy: pull
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
-      when: always
-  # tags:
-  #   - local_runner
+    - eval $(ssh-agent -s)
+    - bash -c 'ssh-add <(echo "$SSH_PRIVATE_KEY")'
+    - mkdir -p ~/.ssh
+    - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - >
+      ssh $SSH_USER@$SSH_SERVER_IP
+      "docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY};
+      cd ${PATH_TO_PROJECT};
+      docker-compose down;
+      docker pull ${CI_REGISTRY_IMAGE}:latest;
+      docker-compose up -d;
+      docker image prune -f;"
