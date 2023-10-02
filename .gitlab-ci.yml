@@ -9,10 +9,12 @@ stages:
 
 .base-rules:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
       when: always
-    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_COMMIT_BRANCH == "uat"'
       when: always
+    # - if: '$CI_PIPELINE_SOURCE == "push"'
+    #   when: always
     - if: $CI_COMMIT_TAG
       when: never
 
@@ -29,6 +31,7 @@ build:
   script:
     - "node --version"
     - npm i
+    - npm run nest:build
   cache:
     <<: *global_cache
     policy: push
@@ -36,6 +39,8 @@ build:
   #   - local_runner
 
 deploy:
+  only: 
+    - uat
   stage: deploy_stage
   extends: .base-rules
   script:
