@@ -1,20 +1,18 @@
-import { GenImageRepository } from "@gen-image/gen-image.repository";
-import { GenImageReplaceObject } from "@gen-image/types/genImage";
-import { GenQuality } from "@gen-image/utils/constant";
-import { Inject, Injectable, Logger } from "@nestjs/common";
-import { KonvaGen } from "./konva-gen";
-import { MINIO_CONNECTION } from "nestjs-minio";
-import { Client } from 'minio';
-import { randomUUID } from "crypto";
-import { Image } from "konva/lib/shapes/Image";
+import {GenImageRepository} from "@gen-image/gen-image.repository";
+import {GenImageReplaceObject} from "@gen-image/types/genImage";
+import {GenQuality} from "@gen-image/utils/constant";
+import {Inject, Injectable, Logger} from "@nestjs/common";
+import {KonvaGen} from "./konva-gen";
+import {MINIO_CONNECTION} from "nestjs-minio";
+import {Client} from 'minio';
+import {randomUUID} from "crypto";
+import {Image} from "konva/lib/shapes/Image";
 import * as console from "console";
 
 
 @Injectable()
 export class GenImageService {
     private readonly logger = new Logger(GenImageService.name)
-
-
 
     constructor(
         private repository: GenImageRepository,
@@ -27,10 +25,10 @@ export class GenImageService {
         options: GenImageReplaceObject[],
         genQuality: GenQuality = GenQuality.Normal
     ) {
-        return this.handleEvent({ template, options, genQuality })
+        return this.handleEvent({template, options, genQuality})
     }
 
-    handleEvent({ template, options, genQuality }: any) {
+    handleEvent({template, options, genQuality}: any) {
         this.logger.log(":: Enter genImage function ")
         const uidMain = randomUUID()
         console.time(uidMain)
@@ -40,11 +38,10 @@ export class GenImageService {
                     return Promise.all(options.map((option) => {
                         const uid = randomUUID()
                         console.time(uid)
-                        return this.repository.genOneOptions(option, new KonvaGen(konvaGen.getStage()), genQuality)
+                        let localKonva = new KonvaGen(konvaGen.getStage())
+                        return this.repository.genOneOptions(option, localKonva, genQuality)
                             .then((result) => {
-                                return this.saveTicket({ konvaGen: result, genQuality, uid }).then(
-                                    () => { result.getStage().destroy() }
-                                )
+                                return this.saveTicket({konvaGen: result, genQuality, uid})
                             });
                     }))
 
@@ -52,7 +49,7 @@ export class GenImageService {
                     this.logger.error(":: Error genImage function ")
                     this.logger.error(e)
                 }
-            })
+            }).then(() => console.timeEnd(uidMain))
     }
 
 
@@ -61,7 +58,7 @@ export class GenImageService {
         this.saveTicket(input)
     }
 
-    saveTicket({ konvaGen, genQuality, uid }: {
+    saveTicket({konvaGen, genQuality, uid}: {
         konvaGen: KonvaGen,
         genQuality: GenQuality,
         uid: string
