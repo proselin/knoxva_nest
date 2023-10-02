@@ -1,5 +1,9 @@
 image: node:18-alpine
 
+before_script:
+  - apt-get update
+  - apt-get install python3
+
 
 stages:
   - build_stage
