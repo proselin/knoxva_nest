@@ -1,37 +1,42 @@
-image: node-18-alpine
-
-
-before_script:
-  - docker version
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  - apk update && apk add openssh-client bash
-  - apk add python3 
-
 stages:
-  - build
-  - run
+  - build_stage
+  - deploy_stage
 
-# Job's name
+.base-rules:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - if: $CI_COMMIT_TAG
+      when: never
+
+cache: &global_cache
+  key: $CI_COMMIT_REF_SLUG
+  policy: pull-push
+  paths:
+    - node_modules/
+    - package-lock.json
+
 build:
-  # Define stage
-  stage: build
-  # What to run on the job.
+  stage: build_stage
+  extends: .base-rules
   script:
-    - npm install
-    - npm run nest:build
-  artifacts:
-    paths:
-      - node_modules
+    - "node --version"
+    - npm i
+  cache:
+    <<: *global_cache
+    policy: push
+  tags:
+    - local_runner
 
-run:
-  stage: run
+deploy:
+  stage: deploy_stage
+  extends: .base-rules
   script:
-    - node ./dist/main.js
-  artifacts:
-    paths:
-      - node_modules/
-
-second-job-parallel:
-  stage: run
-  script:
-    - echo "I'm running at the same time as second-job!!!"
+    - "pm2 start ecosystem.config.js"
+  cache:
+    <<: *global_cache
+    policy: pull
+  tags:
+    - local_runner
