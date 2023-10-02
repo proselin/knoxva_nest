@@ -1,10 +1,10 @@
-RUN apt-get install python3
+#RUN apt-get install python3
 
 ###################
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
 
-FROM node:18-alpine As development
+FROM node:18 As development
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -27,7 +27,7 @@ USER node
 # BUILD FOR PRODUCTION
 ###################
 
-FROM node:18-alpine As build
+FROM node:18 As build
 
 WORKDIR /usr/src/app
 
@@ -58,7 +58,7 @@ USER node
 # PRODUCTION
 ###################
 
-FROM node:18-alpine As production
+FROM node:18 As production
 
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
