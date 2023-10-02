@@ -1,3 +1,6 @@
+image: node:18-alpine
+
+
 stages:
   - build_stage
   - deploy_stage
