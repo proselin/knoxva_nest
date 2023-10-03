@@ -90,12 +90,12 @@ export class KonvaGen {
             }
 
             const url = value ?? node.attrs['source']
-            Konva.Image.fromURL(url, (image: Image) => {
+            this.fromURL(url, (image: Image) => {
                 node.setAttr('image', image.image())
                 //@ts-ignore
                 image.image().onLoad = null
                 // @ts-ignore
-                    global?.gc()
+
                 resolve()
                 },
                 err => reject(err)
@@ -103,6 +103,23 @@ export class KonvaGen {
         })
 
 
+    }
+
+    fromURL(url: string, callback: Function, onError: Function | null = null) {
+        let img = Konva.Util.createImageElement();
+        img.onload = function () {
+            let image = new Image({
+                image: img,
+            });
+            process.nextTick(() => {
+                img.onload = null
+            })
+            if (global?.gc) {global.gc();}
+            callback(image);
+        };
+        img.onerror = onError;
+        img.crossOrigin = 'Anonymous';
+        img.src = url;
     }
 
     toDataUrl(quality: GenQuality, option?: ToDataUrlConfig) {
