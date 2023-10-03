@@ -14,13 +14,12 @@ export class GenImageConsumer {
     @Process()
     async generateImageJob(job: Job<InputGenerateImageParams>) {
         const progress = 100;
-        await this.genImageService.genImage(
-            job.data.template,
-            job.data.options,
-            job.data.genQuality)
         await job.progress(progress);
         // await job.finished()
-        return {};
+        return this.genImageService.genImage(
+            job.data.template,
+            job.data.options,
+            job.data.genQuality);
     }
 
     @OnQueueActive()

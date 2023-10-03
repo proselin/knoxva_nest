@@ -113,13 +113,10 @@ export class KonvaGen {
             });
             process.nextTick(() => {
                 if (global?.gc) {global.gc();}
-                Logger.log(process.memoryUsage().rss)
+                img.onload = null
+                img.src = null
+                img.onerror = null
             })
-
-            img.onload = null
-            img.src = null
-            img.onerror = null
-
             callback(image);
         };
         img.onerror = onError;

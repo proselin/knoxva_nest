@@ -30,8 +30,8 @@ export class GenImageController {
         const template = genImageBody.template
         const obReplace: GenImageReplaceObject[] = genImageBody.options
         const genQuality = genImageBody.genQuality
-        // await this.genImageProducer.addJob(template, obReplace, genQuality)
-        return this.genImageService.genImage(template, obReplace, genQuality)
+        await this.genImageProducer.addJob(template, obReplace, genQuality)
+        // return this.genImageService.genImage(template, obReplace, genQuality)
     }
 
     @Get('/download')

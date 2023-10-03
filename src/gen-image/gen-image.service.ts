@@ -67,9 +67,6 @@ export class GenImageService {
         return konvaGen.toImage(genQuality).then(
             (response: Image) => {
                 const result = <{ type: string, data: Buffer }>this.repository.decodeBase64Image(response['src'])
-
-                //Clean
-
                 const metaData: Parameters<typeof this.minioClient.putObject>[3] = {
                     "Content-Encoding": 'base64',
                     "Content-Type": result?.type

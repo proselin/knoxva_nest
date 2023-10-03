@@ -29,6 +29,7 @@ export class GenImageProducer {
                     genQuality
                 }, {
                     attempts: 3,
+                    delay: 3000,
                     backoff: {
                         type: 'exponential',
                         delay: 1000,
