@@ -8,6 +8,7 @@ import {Client} from 'minio';
 import {randomUUID} from "crypto";
 import {Image} from "konva/lib/shapes/Image";
 import * as console from "console";
+import Konva from "konva";
 
 
 @Injectable()
@@ -38,8 +39,7 @@ export class GenImageService {
                     return Promise.all(options.map((option) => {
                         const uid = randomUUID()
                         console.time(uid)
-                        let localKonva = new KonvaGen(konvaGen.getStage())
-                        return this.repository.genOneOptions(option, localKonva, genQuality)
+                        return this.repository.genOneOptions(option, konvaGen, genQuality)
                             .then((result) => {
                                 return this.saveTicket({konvaGen: result, genQuality, uid})
                             });
@@ -49,7 +49,11 @@ export class GenImageService {
                     this.logger.error(":: Error genImage function ")
                     this.logger.error(e)
                 }
-            }).then(() => console.timeEnd(uidMain))
+                konvaGen.getStage().clearCache()
+                konvaGen.getStage().destroy()
+            }).then(() => {
+                console.timeEnd(uidMain)
+            })
     }
 
 
