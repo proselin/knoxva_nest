@@ -1,16 +1,16 @@
 import {GenImageRepository} from "@gen-image/gen-image.repository";
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
 import {GenQuality} from "@gen-image/utils/constant";
-import {Inject, Injectable, Logger} from "@nestjs/common";
+import {Global, Inject, Injectable, Logger} from "@nestjs/common";
 import {KonvaGen} from "./konva-gen";
 import {MINIO_CONNECTION} from "nestjs-minio";
 import {Client} from 'minio';
 import {randomUUID} from "crypto";
 import {Image} from "konva/lib/shapes/Image";
 import * as console from "console";
-import Konva from "konva";
 
 
+@Global()
 @Injectable()
 export class GenImageService {
     private readonly logger = new Logger(GenImageService.name)
@@ -29,35 +29,34 @@ export class GenImageService {
         return this.handleEvent({template, options, genQuality})
     }
 
-    async handleEvent({template, options, genQuality}: any) {
+    handleEvent({template, options, genQuality}: any) {
         this.logger.log(":: Enter genImage function ")
         const uidMain = randomUUID()
-        console.time(uidMain)
-        let konvaGen = await this.repository.initTemplate(template, options);
-        try {
+        return this.repository.initTemplate(template, options).then(
+            (konvaGen) => {
+                try {
+                    return Promise.all(options.map((option) => {
+                        const uid = randomUUID()
+                        console.time(uid)
+                        let localKonva = new KonvaGen(konvaGen.getStage())
+                        return this.repository.genOneOptions(option, localKonva, genQuality)
+                            .then((result) => {
+                                return this.saveTicket({konvaGen: result, genQuality, uid})
+                            });
+                    })).then(
+                        (res) => {
+                            konvaGen.clean()
+                            return res
+                        }
+                    )
 
-            options.map(async (option) => {
-                const uid = randomUUID()
-                console.time(uid)
-                let result = await this.repository.genOneOptions(option, konvaGen, genQuality);
-                return this.saveTicket({konvaGen: result, genQuality, uid}).then(() => {
-                    result.clean()
-                })
-            });
-
-        } catch (e) {
-            this.logger.error(":: Error genImage function ")
-            this.logger.error(e)
-        }
-        konvaGen.clean()
-        console.timeEnd(uidMain)
+                } catch (e) {
+                    this.logger.error(":: Error genImage function ")
+                    this.logger.error(e)
+                }
+            })
     }
 
-
-    // @OnEvent('order.saveticket')
-    pushQueue(input: { konvaGen: KonvaGen, genQuality: GenQuality, uid: string }) {
-        this.saveTicket(input)
-    }
 
     saveTicket({konvaGen, genQuality, uid}: {
         konvaGen: KonvaGen,

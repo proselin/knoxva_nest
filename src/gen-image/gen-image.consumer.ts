@@ -1,8 +1,9 @@
-import {OnQueueActive, OnQueueCompleted, Process, Processor} from "@nestjs/bull";
+import {OnGlobalQueueError, OnQueueActive, OnQueueCompleted, Process, Processor} from "@nestjs/bull";
 import {Job} from "bull";
 import {InputGenerateImageParams} from "@gen-image/types/genImage";
 import {GenImageService} from "@gen-image/gen-image.service";
 import {Logger} from "@nestjs/common";
+import * as console from "console";
 
 @Processor('generate-ticket')
 export class GenImageConsumer {
@@ -24,15 +25,23 @@ export class GenImageConsumer {
 
     @OnQueueActive()
     onActive(job: Job) {
-        Logger.log(
-            `Processing job ${job.id} of type ${job.name} with data ${job.data}...`,
-        );
+        console.time(job.id + "")
+        Logger.verbose(`Processing job ${job.id} of type ${job.name}`, GenImageConsumer.name);
     }
 
     @OnQueueCompleted()
-    onComplete() {
-        Logger.log("DONE")
+    onComplete(job: Job) {
+        Logger.verbose(`Done job ${job.id} of type ${job.name}`, GenImageConsumer.name);
+        console.timeEnd(job.id + "")
+
     }
+
+    @OnGlobalQueueError()
+    onError(job: Job) {
+        Logger.error(`Error job ${job.id} of type ${job.name}`, GenImageConsumer.name);
+        console.timeEnd(job.id + "")
+    }
+
 
 
 

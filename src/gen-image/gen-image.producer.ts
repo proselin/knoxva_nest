@@ -1,9 +1,10 @@
-import {Injectable} from "@nestjs/common";
+import {Global, Injectable} from "@nestjs/common";
 import {InjectQueue} from "@nestjs/bull";
 import {Queue} from "bull";
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
 import {GenQuality} from "@gen-image/utils/constant";
 
+@Global()
 @Injectable()
 export class GenImageProducer {
 
