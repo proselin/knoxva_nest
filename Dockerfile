@@ -6,6 +6,10 @@
 
 FROM node:18-alpine As development
 
+#install python
+RUN apt-get update || : && apt-get install python3 -y
+RUN apt-get install python3-pip -y
+
 # Create app directory
 WORKDIR /usr/src/app
 
