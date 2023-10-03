@@ -112,13 +112,19 @@ export class KonvaGen {
                 image: img,
             });
             process.nextTick(() => {
-                img.onload = null
+                if (global?.gc) {global.gc();}
+                Logger.log(process.memoryUsage().rss)
             })
-            if (global?.gc) {global.gc();}
+
+            img.onload = null
+            img.src = null
+            img.onerror = null
+
             callback(image);
         };
         img.onerror = onError;
         img.crossOrigin = 'Anonymous';
+        img.cacheControl = "no-cache"
         img.src = url;
     }
 
@@ -197,6 +203,7 @@ export class KonvaGen {
         this.clear()
         this.clearCache()
         this.destroy()
+        if (global?.gc) {global.gc();}
     }
 
 
