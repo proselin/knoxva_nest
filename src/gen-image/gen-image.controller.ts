@@ -3,6 +3,7 @@ import {GenImageReplaceObject} from "@gen-image/types/genImage";
 import {GenImageDTO} from "./dtos/genImage.dto";
 import * as console from "console";
 import {GenImageProducer} from "@gen-image/gen-image.producer";
+import {GenImageService} from "@gen-image/gen-image.service";
 
 const fetch = require("node-fetch")
 const fs = require("fs");
@@ -16,7 +17,10 @@ export class GenImageController {
 
     logger = new Logger(GenImageController.name)
 
-    constructor(private genImageProducer: GenImageProducer) {
+    constructor(
+        private genImageProducer: GenImageProducer,
+        private genImageService: GenImageService
+    ) {
 
     }
 
@@ -26,7 +30,8 @@ export class GenImageController {
         const template = genImageBody.template
         const obReplace: GenImageReplaceObject[] = genImageBody.options
         const genQuality = genImageBody.genQuality
-        await this.genImageProducer.addJob(template, obReplace, genQuality)
+        // await this.genImageProducer.addJob(template, obReplace, genQuality)
+        return this.genImageService.genImage(template, obReplace, genQuality)
     }
 
     @Get('/download')
