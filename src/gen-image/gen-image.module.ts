@@ -11,6 +11,10 @@ import {GenImageProducer} from "./gen-image.producer";
     imports: [
         BullModule.registerQueue({
             name: 'generate-ticket',
+            limiter: {
+                max: 5,
+                duration: 1000
+            }
         })
     ],
     controllers: [GenImageController],
@@ -21,5 +25,4 @@ import {GenImageProducer} from "./gen-image.producer";
         GenImageConsumer
     ]
 })
-export class GenImageModule {
-}
+export class GenImageModule {}

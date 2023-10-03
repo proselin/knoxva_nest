@@ -23,10 +23,17 @@ export class GenImageProducer {
         do {
             if (!options.length) return
             await this.generateImageQueue.add({
-                template,
-                options: options.splice(0, GenImageProducer.MAX_SIZE),
-                genQuality
-            })
+                    template,
+                    options: options.splice(0, GenImageProducer.MAX_SIZE),
+                    genQuality
+                }, {
+                    attempts: 3,
+                    backoff: {
+                        type: 'exponential',
+                        delay: 1000,
+                    },
+                }
+            )
         } while (options.length > 0)
     }
 }

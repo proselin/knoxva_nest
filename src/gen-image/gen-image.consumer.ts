@@ -4,9 +4,6 @@ import {InputGenerateImageParams} from "@gen-image/types/genImage";
 import {GenImageService} from "@gen-image/gen-image.service";
 import {Logger} from "@nestjs/common";
 
-const EventEmitter = require( "events" );
-EventEmitter.defaultMaxListeners = 20;
-
 @Processor('generate-ticket')
 export class GenImageConsumer {
 
@@ -21,7 +18,7 @@ export class GenImageConsumer {
             job.data.options,
             job.data.genQuality)
         await job.progress(progress);
-        await job.finished()
+        // await job.finished()
         return {};
     }
 
