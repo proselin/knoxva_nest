@@ -5,6 +5,7 @@ import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
 import { GenImageReplaceObject, ToDataUrlConfig, ToImageConfig } from "./types/genImage";
 import { GenQuality } from "./utils/constant";
+import * as process from "process";
 
 const Konva = require('konva')
 
@@ -89,8 +90,12 @@ export class KonvaGen {
             }
 
             const url = value ?? node.attrs['source']
-            Konva.Image.fromURL(url, (image) => {
+            this.fromURL(url, (image: Image) => {
                 node.setAttr('image', image.image())
+                //@ts-ignore
+                image.image().onLoad = null
+                // @ts-ignore
+
                 resolve()
                 },
                 err => reject(err)
@@ -98,6 +103,26 @@ export class KonvaGen {
         })
 
 
+    }
+
+    fromURL(url: string, callback: Function, onError: Function | null = null) {
+        let img = Konva.Util.createImageElement();
+        img.onload = function () {
+            let image = new Image({
+                image: img,
+            });
+            process.nextTick(() => {
+                if (global?.gc) {global.gc();}
+                img.onload = null
+                img.src = null
+                img.onerror = null
+            })
+            callback(image);
+        };
+        img.onerror = onError;
+        img.crossOrigin = 'Anonymous';
+        img.cacheControl = "no-cache"
+        img.src = url;
     }
 
     toDataUrl(quality: GenQuality, option?: ToDataUrlConfig) {
@@ -175,6 +200,7 @@ export class KonvaGen {
         this.clear()
         this.clearCache()
         this.destroy()
+        if (global?.gc) {global.gc();}
     }
 
 

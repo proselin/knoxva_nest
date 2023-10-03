@@ -51,11 +51,11 @@ export class GenImageRepository {
         const key = randomUUID()
         console.time(key)
 
-        return konvaGen.replaceObject(option).then(() => {
-            konvaGen.draw()
-            return konvaGen
-        })
-    }
+         return konvaGen.replaceObject(option).then(() => {
+             konvaGen.draw()
+             return konvaGen
+         })
+     }
 
     async initTemplate(template: string | object, replaceOb: GenImageReplaceObject[]): Promise<KonvaGen> {
         this.logger.log(":: Enter function initTemplate")

@@ -9,6 +9,7 @@ module.exports = {
          NODE_ENV: "development"
       },
       max_memory_restart: "300M",
+        "node-args": "--expose-gc",
       instances: 2
     }]
   }
