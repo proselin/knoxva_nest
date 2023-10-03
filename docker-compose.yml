@@ -1,13 +1,13 @@
 version: '3.8'
 services:
-  redis: # Name of container
-    image: redis
-    ports:
-      - 6379:6379
-    volumes:
-      - redis:/data
-    networks:
-      - local
+#   redis: # Name of container
+#     image: redis
+#     ports:
+#       - 6379:6379
+#     volumes:
+#       - redis:/data
+#     networks:
+#       - local
   api:
     build:
       dockerfile: Dockerfile
@@ -20,12 +20,12 @@ services:
 
     ports:
       - 3000:3000
-    depends_on:
-      - redis
-    command:
-      - node ./dist/main.js
-volumes:
-  redis:
-    driver: local
+    # depends_on:
+      # - redis
+    # command:
+    #   - node ./dist/main.js
+# volumes:
+  # redis:
+  #   driver: local
 networks:
   local:
