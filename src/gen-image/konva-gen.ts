@@ -5,6 +5,7 @@ import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
 import { GenImageReplaceObject, ToDataUrlConfig, ToImageConfig } from "./types/genImage";
 import { GenQuality } from "./utils/constant";
+import * as process from "process";
 
 const Konva = require('konva')
 
@@ -89,8 +90,12 @@ export class KonvaGen {
             }
 
             const url = value ?? node.attrs['source']
-            Konva.Image.fromURL(url, (image) => {
+            Konva.Image.fromURL(url, (image: Image) => {
                 node.setAttr('image', image.image())
+                //@ts-ignore
+                image.image().onLoad = null
+                // @ts-ignore
+                    global?.gc()
                 resolve()
                 },
                 err => reject(err)
