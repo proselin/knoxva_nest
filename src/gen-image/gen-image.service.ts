@@ -29,31 +29,28 @@ export class GenImageService {
         return this.handleEvent({template, options, genQuality})
     }
 
-    handleEvent({template, options, genQuality}: any) {
+    async handleEvent({template, options, genQuality}: any) {
         this.logger.log(":: Enter genImage function ")
         const uidMain = randomUUID()
         console.time(uidMain)
-        return this.repository.initTemplate(template, options).then(
-            (konvaGen) => {
-                try {
-                    return Promise.all(options.map((option) => {
-                        const uid = randomUUID()
-                        console.time(uid)
-                        return this.repository.genOneOptions(option, konvaGen, genQuality)
-                            .then((result) => {
-                                return this.saveTicket({konvaGen: result, genQuality, uid})
-                            });
-                    }))
+        let konvaGen = await this.repository.initTemplate(template, options);
+        try {
 
-                } catch (e) {
-                    this.logger.error(":: Error genImage function ")
-                    this.logger.error(e)
-                }
-                konvaGen.getStage().clearCache()
-                konvaGen.getStage().destroy()
-            }).then(() => {
-                console.timeEnd(uidMain)
-            })
+            options.map(async (option) => {
+                const uid = randomUUID()
+                console.time(uid)
+                let result = await this.repository.genOneOptions(option, konvaGen, genQuality);
+                return this.saveTicket({konvaGen: result, genQuality, uid}).then(() => {
+                    result.clean()
+                })
+            });
+
+        } catch (e) {
+            this.logger.error(":: Error genImage function ")
+            this.logger.error(e)
+        }
+        konvaGen.clean()
+        console.timeEnd(uidMain)
     }
 
 

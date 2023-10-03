@@ -158,5 +158,25 @@ export class KonvaGen {
         }
     }
 
+
+    clearCache() {
+        this.stage.clearCache()
+    }
+
+    clear(){
+        this.stage.clear()
+    }
+
+    destroy() {
+        this.stage.destroy()
+    }
+
+    clean() {
+        this.clear()
+        this.clearCache()
+        this.destroy()
+    }
+
+
 }
 
