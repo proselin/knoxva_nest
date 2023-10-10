@@ -1,16 +1,15 @@
-import {Body, Controller, Get, Logger, Query, Scope} from "@nestjs/common";
+import {Body, Controller, Get, Logger, Post, Query, Scope} from "@nestjs/common";
 import {GenImageReplaceObject} from "@gen-image/types/genImage";
 import {GenImageDTO} from "./dtos/genImage.dto";
 import * as console from "console";
 import {GenImageProducer} from "@gen-image/gen-image.producer";
-import {GenImageService} from "@gen-image/gen-image.service";
 
 const fetch = require("node-fetch")
 const fs = require("fs");
 
 
 @Controller({
-    path: '/gen',
+    path: '/generate',
     scope: Scope.REQUEST
 })
 export class GenImageController {
@@ -19,13 +18,13 @@ export class GenImageController {
 
     constructor(
         private genImageProducer: GenImageProducer,
-        private genImageService: GenImageService
+        // private genImageService: GenImageService
     ) {
 
     }
 
 
-    @Get()
+    @Post()
     async genImage(@Body() genImageBody: GenImageDTO) {
         const template = genImageBody.template
         const obReplace: GenImageReplaceObject[] = genImageBody.options
