@@ -1,8 +1,8 @@
 import {Global, Injectable} from "@nestjs/common";
 import {InjectQueue} from "@nestjs/bull";
 import {Queue} from "bull";
-import {GenImageReplaceObject} from "@gen-image/types/genImage";
-import {GenQuality} from "@gen-image/utils/constant";
+import {IReplaceObject} from "../shared/types/genImage";
+import {Quality} from "../shared/utils/constant";
 
 @Global()
 @Injectable()
@@ -18,8 +18,8 @@ export class GenImageProducer {
 
     async addJob(
         template: string,
-        options: GenImageReplaceObject[],
-        genQuality: GenQuality
+        options: IReplaceObject[],
+        genQuality: Quality
     ) {
         do {
             if (!options.length) return

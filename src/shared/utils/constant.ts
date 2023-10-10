@@ -1,4 +1,4 @@
-export enum GenQuality {
+export enum Quality {
     Good = 'good',
     Ultra = 'ultra',
     Normal = 'normal',

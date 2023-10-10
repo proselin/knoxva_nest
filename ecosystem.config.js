@@ -10,8 +10,10 @@ module.exports = {
         },
         max_memory_restart: "1000M",
         "node-args": "--expose-gc",
-        watch: true,
-        instances: 2
+        watch_delay: 2000,
+        ignore_watch : ["node_modules", "\\.git", "*.log"],
+        watch: ["build"],
+        instances: 3
     }]
 }
   

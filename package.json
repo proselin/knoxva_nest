@@ -18,7 +18,9 @@
     "prestart:prod": "rimraf dist && npm run build",
     "start:prod": "node dist/main.js",
     "debug": "nest start --debug",
-    "copy:assets": "cpx \"src/assets/**/*\" \"dist/assets\" "
+    "copy:assets": "cpx \"src/assets/**/*\" \"dist/assets\" ",
+    "pm2:run": "pm2 start",
+    "pm2:start": "npm run nest:build && npm run pm2:run"
   },
   "dependencies": {
     "@nestjs/bull": "^10.0.1",
