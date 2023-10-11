@@ -1,4 +1,5 @@
 import {Quality} from "../utils/constant";
+import {GenerateImageDTO} from "../dtos/generateImageDTO";
 
 export type ToImageConfig = ExportConfig & {
     callback?: (img: any) => void;
@@ -27,8 +28,4 @@ export type IReplaceObject = {
     [p: string]: string
 }
 
-export type InputGenerateImageParams = {
-    template: string
-    options: IReplaceObject[]
-    genQuality: Quality,
-}
+export type InputGenerateImageParams = GenerateImageDTO

@@ -1,20 +1,20 @@
 import {randomUUID} from "crypto";
-import {Quality} from "../shared/utils/constant";
+import {Quality} from "@shared/utils/constant";
 import {Client} from "minio";
 import {Inject, Injectable, Logger} from "@nestjs/common";
-import {IReplaceObject} from "../shared/types/genImage";
-import {KonvaGen} from "../shared/entities/konva-gen";
+import {IReplaceObject} from "@shared/types/genImage.type";
+import {KonvaGen} from "@shared/entities/konva-gen";
 import {MINIO_CONNECTION} from "nestjs-minio";
 
 
 @Injectable()
 export class GenerateImageService {
 
+    Logger = new Logger(GenerateImageService.name)
 
     constructor(
         @Inject(MINIO_CONNECTION) private readonly minioClient: Client
-    ) {
-    }
+    ) {}
 
     genImage(
         template: string,
@@ -101,9 +101,6 @@ export class GenerateImageService {
         Logger.log(":: Enter genOneOptions function ")
         Logger.log(":: GenQuality " + genQuality)
         Logger.log(":: options " + JSON.stringify(option))
-        const key = randomUUID()
-        // console.time(key)
-
         return konvaGen.replaceObject(option).then(
             () => konvaGen
         )

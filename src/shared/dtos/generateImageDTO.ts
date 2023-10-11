@@ -1,8 +1,9 @@
-import { IReplaceObject } from "../types/genImage"
+import { IReplaceObject } from "../types/genImage.type"
 import { Quality } from "../utils/constant"
 import {IsArray, IsString} from "class-validator"
 
-export class GenImageDTO {
+export class GenerateImageDTO {
+
     @IsString()
     genQuality: Quality
 
@@ -11,4 +12,5 @@ export class GenImageDTO {
 
     @IsString()
     template: string
+
 }

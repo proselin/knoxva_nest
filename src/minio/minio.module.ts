@@ -1,19 +1,21 @@
-import { Global, Module } from '@nestjs/common';
-import { NestMinioModule } from 'nestjs-minio';
+import {Module} from '@nestjs/common';
+import {getEnvOrThrow} from '@shared/utils/functions';
+import {CONFIG_NAME} from '@shared/utils/enums';
+import {NestMinioModule} from 'nestjs-minio';
 
-@Global()
 @Module({
     controllers: [],
     imports: [
         NestMinioModule.register(
             {
                 isGlobal: true,
-                endPoint: '172.25.88.20',
-                port: 9000,
-                useSSL: false,
-                accessKey: 'meow',
-                secretKey: 'tdh-20092023@makeColor',
+                endPoint: getEnvOrThrow(CONFIG_NAME.MINIO_ENDPOINT),
+                port: +getEnvOrThrow(CONFIG_NAME.MINIO_PORT),
+                useSSL: getEnvOrThrow(CONFIG_NAME.MINIO_USESSL) === 'true',
+                accessKey: getEnvOrThrow(CONFIG_NAME.MINIO_ACCESS_KEY),
+                secretKey: getEnvOrThrow(CONFIG_NAME.MINIO_SECRET_KEY),
             }),
     ],
 })
-export class MinIOModule { }
+export class MinIOModule {
+}

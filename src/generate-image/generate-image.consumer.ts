@@ -1,6 +1,6 @@
 import {OnGlobalQueueError, OnQueueActive, OnQueueCompleted, Process, Processor} from "@nestjs/bull";
 import {Job} from "bull";
-import {InputGenerateImageParams, IReplaceObject} from "../shared/types/genImage";
+import {InputGenerateImageParams, IReplaceObject} from "../shared/types/genImage.type";
 import {Logger} from "@nestjs/common";
 import * as console from "console";
 import child from "child_process";
@@ -9,9 +9,11 @@ import {ForkProcessService} from "../generate-image-child-process/fork-process.s
 import {randomUUID} from "crypto";
 
 @Processor('generate-ticket')
-export class GenImageConsumer {
+export class GenerateImageConsumer {
 
-    constructor(private genImageProcess: ForkProcessService) {
+    constructor(
+        private readonly genImageProcess: ForkProcessService
+    ) {
     }
 
     @Process()
@@ -24,14 +26,12 @@ export class GenImageConsumer {
             job.data.template,
             job.data.options,
             job.data.genQuality
-        ).then(
-            (rs: string[]) => {
-                Logger.log(rs, "End Process Child")
-                global?.gc && global.gc()
-                console.timeEnd(uidMain)
-                return rs
-            }
-        )
+        ).then((rs: string[]) => {
+            Logger.log(rs, "End Process Child")
+            global?.gc && global.gc()
+            console.timeEnd(uidMain)
+            return rs
+        })
     }
 
     sendToChildProcess(template: string, obReplace: IReplaceObject[], genQuality: Quality) {
@@ -59,19 +59,19 @@ export class GenImageConsumer {
     @OnQueueActive()
     onActive(job: Job) {
         console.time(job.id + "")
-        Logger.verbose(`Processing job ${job.id} of type ${job.name}`, GenImageConsumer.name);
+        Logger.verbose(`Processing job ${job.id} of type ${job.name}`, GenerateImageConsumer.name);
     }
 
     @OnQueueCompleted()
     onComplete(job: Job) {
-        Logger.verbose(`Done job ${job.id} of type ${job.name}`, GenImageConsumer.name);
+        Logger.verbose(`Done job ${job.id} of type ${job.name}`, GenerateImageConsumer.name);
         console.timeEnd(job.id + "")
 
     }
 
     @OnGlobalQueueError()
     onError(job: Job) {
-        Logger.error(`Error job ${job.id} of type ${job.name}`, GenImageConsumer.name);
+        Logger.error(`Error job ${job.id} of type ${job.name}`, GenerateImageConsumer.name);
         console.timeEnd(job.id + "")
     }
 

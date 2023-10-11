@@ -1,5 +1,5 @@
-import {IReplaceObject} from "../shared/types/genImage";
-import {Quality} from "../shared/utils/constant";
+import {IReplaceObject} from "@shared/types/genImage.type";
+import {Quality} from "@shared/utils/constant";
 
 export type PassDataChild = {
     command: "generateImage",

@@ -3,7 +3,7 @@ import {Node, NodeConfig} from "konva/lib/Node";
 import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
-import { IReplaceObject, ToDataUrlConfig, ToImageConfig } from "../types/genImage";
+import { IReplaceObject, ToDataUrlConfig, ToImageConfig } from "../types/genImage.type";
 import { Quality } from "../utils/constant";
 import * as process from "process";
 

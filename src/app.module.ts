@@ -1,22 +1,22 @@
-import {GenImageModule} from "@gen-image/gen-image.module";
 import {Module} from "@nestjs/common";
-import {MinIOModule} from "./minio/minio.module";
 import {BullModule} from "@nestjs/bull";
-
+import {getEnvOrThrow} from "@shared/utils/functions";
+import {CONFIG_NAME} from "@shared/utils/enums";
+import { MinIOModule } from "@minio/minio.module";
+import {GenerateImageModule} from "@generate-image/generate-image.module";
 
 @Module(
     {
         imports: [
-            GenImageModule,
-            MinIOModule,
             BullModule.forRoot({
                 redis: {
-                    host: 'localhost',
-                    port: 6379,
+                    host: getEnvOrThrow(CONFIG_NAME.REDIS_HOST),
+                    port: +getEnvOrThrow(CONFIG_NAME.REDIS_PORT),
                 },
             }),
+            GenerateImageModule,
+            MinIOModule,
         ]
     }
 )
-export class AppModule {
-}
+export class AppModule {}
