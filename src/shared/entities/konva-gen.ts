@@ -3,8 +3,8 @@ import {Node, NodeConfig} from "konva/lib/Node";
 import {Image} from "konva/lib/shapes/Image";
 import {Stage} from "konva/lib/Stage";
 import {Text} from "konva/lib/shapes/Text";
-import { GenImageReplaceObject, ToDataUrlConfig, ToImageConfig } from "./types/genImage";
-import { GenQuality } from "./utils/constant";
+import { IReplaceObject, ToDataUrlConfig, ToImageConfig } from "../types/genImage.type";
+import { Quality } from "../utils/constant";
 import * as process from "process";
 
 const Konva = require('konva')
@@ -12,12 +12,7 @@ const Konva = require('konva')
 export class KonvaGen {
 
     private _logger = new Logger(KonvaGen.name)
-    logger = {
-        log: (...arg: any[]) => {},
-        warn: (...arg: any[]) => {},
-        error: (...arg: any[]) => this._logger.error(arg),
-
-    }
+    logger = this._logger
     private stage: Stage;
 
 
@@ -60,7 +55,7 @@ export class KonvaGen {
         return this.getStage().find(`#${defined}`)
     }
 
-    async reFormImages(replaceOb: GenImageReplaceObject[]) {
+    async reFormImages(replaceOb: IReplaceObject[]) {
         this.logger.log(":: Enter Reform Image ")
         const imagesId = (this.stage.find('Image') as Image[])
             .filter(value => !!value?.getAttr('source'))
@@ -77,7 +72,7 @@ export class KonvaGen {
             node.setText(value)
             node.fontFamily('Arial')
         }
-        return Promise.resolve()
+        return Promise.resolve(value)
 
     }
 
@@ -92,11 +87,7 @@ export class KonvaGen {
             const url = value ?? node.attrs['source']
             this.fromURL(url, (image: Image) => {
                 node.setAttr('image', image.image())
-                //@ts-ignore
-                image.image().onLoad = null
-                // @ts-ignore
-
-                resolve()
+                resolve(url)
                 },
                 err => reject(err)
             )
@@ -112,7 +103,7 @@ export class KonvaGen {
                 image: img,
             });
             process.nextTick(() => {
-                if (global?.gc) {global.gc();}
+                global?.gc && global.gc()
                 img.onload = null
                 img.src = null
                 img.onerror = null
@@ -120,12 +111,10 @@ export class KonvaGen {
             callback(image);
         };
         img.onerror = onError;
-        img.crossOrigin = 'Anonymous';
-        img.cacheControl = "no-cache"
         img.src = url;
     }
 
-    toDataUrl(quality: GenQuality, option?: ToDataUrlConfig) {
+    toDataUrl(quality: Quality, option?: ToDataUrlConfig) {
         let config: ToDataUrlConfig = {
             pixelRatio: this.getQualityNumber(quality),
         }
@@ -133,7 +122,7 @@ export class KonvaGen {
         return (this.stage.toDataURL(config))
     }
 
-    toImage(quality: GenQuality, option?: ToImageConfig) {
+    toImage(quality: Quality, option?: ToImageConfig) {
         let config: ToImageConfig = {
             pixelRatio: this.getQualityNumber(quality),
         }
@@ -141,7 +130,7 @@ export class KonvaGen {
         return this.stage.toImage(config)
     }
 
-    private getQualityNumber(quality: GenQuality) {
+    private getQualityNumber(quality: Quality) {
         switch (quality) {
             case "ultra":
                 return 3
@@ -162,7 +151,7 @@ export class KonvaGen {
     }
 
 
-     replaceObject(object: GenImageReplaceObject) {
+     replaceObject(object: IReplaceObject) {
         this.logger.log(":: Enter replaceObject function ")
         this.logger.log(":: Replace params " + JSON.stringify(object))
         return Promise.all(Object.entries(object).map(([key, value]) => {

@@ -4,9 +4,8 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "assets": [
-      "**/*.env",
-      "../lib/**/*",
-      "/assets/**/*"
+      "assets/*",
+      "environments/*"
     ],
     "deleteOutDir": true
   }

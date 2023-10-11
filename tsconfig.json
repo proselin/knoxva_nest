@@ -17,13 +17,14 @@
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
+    "lib": ["es2021"],
     "paths": {
       "@assets/*": ["src/assets/*"],
-      "@gen-image/*": ["src/gen-image/*"],
-      "@lib": ["lib/*"]
+      "@generate-image/*": ["src/generate-image/*"],
+      "@shared/*": ["src/shared/*"],
+      "@minio/*": ["src/minio/*"],
+      "@generate-child-process/*": ["src/generate-image-child-process/*"],
+      "@environments/*": ["src/environment/*"]
     },
-    "lib": [
-      "es2021"
-    ]
   }
 }
