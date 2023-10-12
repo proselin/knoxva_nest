@@ -1,23 +1,21 @@
-import { randomUUID } from "crypto";
-import { Quality } from "@shared/utils/constant";
-import { Client } from "minio";
-import { Inject, Injectable, Logger } from "@nestjs/common";
-import { IReplaceObject } from "@shared/types/genImage.type";
-import { KonvaGen } from "@shared/entities/konva-gen";
-import { MINIO_CONNECTION } from "nestjs-minio";
-import { getEnvOrThrow } from "@shared/utils/functions";
-import { CONFIG_NAME } from "@shared/utils/enums";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import {randomUUID} from "crypto";
+import {Quality} from "@shared/utils/constant";
+import {Client} from "minio";
+import {Inject, Injectable, Logger} from "@nestjs/common";
+import {IReplaceObject} from "@shared/types/genImage.type";
+import {KonvaGen} from "@shared/entities/konva-gen";
+import {MINIO_CONNECTION} from "nestjs-minio";
+import {getEnvOrThrow} from "@shared/utils/functions";
+import {CONFIG_NAME} from "@shared/utils/enums";
 
 
 @Injectable()
 export class GenerateImageService {
 
-
     readonly SAVE_BUCKET = getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_MINIO_BUCKET_NAME)
+    logger = new Logger(GenerateImageService.name)
 
     constructor(
-        @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
         @Inject(MINIO_CONNECTION) private readonly minioClient: Client
     ) { }
 

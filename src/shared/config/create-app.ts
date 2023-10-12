@@ -1,13 +1,15 @@
-import { setFlagsFromString } from "v8";
-import { runInNewContext } from "vm";
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../../app.module";
-import { ValidationPipe, VersioningType } from "@nestjs/common";
-import { VERSION } from "@shared/utils/enums";
+import {setFlagsFromString} from "v8";
+import {runInNewContext} from "vm";
+import {NestFactory, Reflector} from "@nestjs/core";
+import {AppModule} from "../../app.module";
+import {ValidationPipe, VersioningType} from "@nestjs/common";
+import {VERSION} from "@shared/utils/enums";
 import * as express from "express";
-import { join } from "path";
-import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
-import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
+import {join} from "path";
+import {FastifyAdapter, NestFastifyApplication} from "@nestjs/platform-fastify";
+import {LoggingInterceptor} from "@shared/interceptor/logging.interceptor";
+import {TransformInterceptor} from "@shared/interceptor/transform-response.interceptor";
+import {TimeoutInterceptor} from "@shared/interceptor/timeout.interceptor";
 
 export async function createApp() {
 
@@ -22,10 +24,21 @@ export async function createApp() {
         new FastifyAdapter()
     )
 
-    app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
     app.useGlobalPipes(
         new ValidationPipe()
+    )
+
+    app.useGlobalInterceptors(
+        new LoggingInterceptor()
+    )
+
+    app.useGlobalInterceptors(
+        new TransformInterceptor<any>(new Reflector())
+    )
+
+    app.useGlobalInterceptors(
+        new TimeoutInterceptor()
     )
 
     app.enableVersioning({

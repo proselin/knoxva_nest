@@ -1,19 +1,17 @@
-import { OnGlobalQueueError, OnQueueActive, OnQueueCompleted, Process, Processor } from "@nestjs/bull";
-import { Job } from "bull";
-import { InputGenerateImageParams, IReplaceObject } from "../shared/types/genImage.type";
-import { Inject, Logger } from "@nestjs/common";
+import {OnGlobalQueueError, OnQueueActive, OnQueueCompleted, Process, Processor} from "@nestjs/bull";
+import {Job} from "bull";
+import {InputGenerateImageParams, IReplaceObject} from "@shared/types/genImage.type";
+import {Logger} from "@nestjs/common";
 import child from "child_process";
-import { Quality } from "../shared/utils/constant";
-import { ForkProcessService } from "../generate-image-child-process/fork-process.service";
-import { randomUUID } from "crypto";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import {Quality} from "@shared/utils/constant";
+import {ForkProcessService} from "@generate-child-process/fork-process.service";
+import {randomUUID} from "crypto";
 
 
 @Processor('generate-ticket')
 export class GenerateImageConsumer {
-
+    logger = new Logger(GenerateImageConsumer.name)
     constructor(
-        @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
         private readonly genImageProcess: ForkProcessService
     ) {
     }
@@ -65,21 +63,17 @@ export class GenerateImageConsumer {
 
     @OnQueueActive()
     onActive(job: Job) {
-        console.time(job.id + "")
-        Logger.verbose(`Processing job ${job.id} of type ${job.name}`, GenerateImageConsumer.name);
+        this.logger.verbose(`Processing Job id ${job.id} `, GenerateImageConsumer.name);
     }
 
     @OnQueueCompleted()
     onComplete(job: Job) {
-        Logger.verbose(`Done job ${job.id} of type ${job.name}`, GenerateImageConsumer.name);
-        console.timeEnd(job.id + "")
-
+        this.logger.verbose(`Done job ${job.id}`, GenerateImageConsumer.name);
     }
 
     @OnGlobalQueueError()
     onError(job: Job) {
-        Logger.error(`Error job ${job.id} of type ${job.name}`, GenerateImageConsumer.name);
-        console.timeEnd(job.id + "")
+        this.logger.error(`Error job ${job.id}`, GenerateImageConsumer.name);
     }
 
 }

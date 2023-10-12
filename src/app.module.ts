@@ -4,7 +4,6 @@ import {getEnvOrThrow} from "@shared/utils/functions";
 import {CONFIG_NAME} from "@shared/utils/enums";
 import {MinIOModule} from "@minio/minio.module";
 import {GenerateImageModule} from "@generate-image/generate-image.module";
-import { WinstonModule } from "nest-winston";
 
 
 @Module(
@@ -28,9 +27,6 @@ import { WinstonModule } from "nest-winston";
                     port: +getEnvOrThrow(CONFIG_NAME.REDIS_PORT),
                 },
             }),
-            WinstonModule.forRoot({
-            }),
-            // options
             GenerateImageModule,
             MinIOModule,
         ]
