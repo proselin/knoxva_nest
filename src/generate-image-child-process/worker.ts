@@ -7,8 +7,10 @@ import {getEnvOrThrow} from "@shared/utils/functions";
 import {CONFIG_NAME} from "@shared/utils/enums";
 
 const MAX_MEMORY_RESTART = +getEnvOrThrow(CONFIG_NAME.CHILD_MAX_RESTART_RAM)
+const logger = new Logger(ChildProcessModule.name)
 
 async function bootstrap() {
+
     const app = await NestFactory.create(ChildProcessModule);
     const service = app.select(ChildProcessModule).get(GenerateImageService)
 
@@ -25,12 +27,13 @@ async function bootstrap() {
             process?.send && process.send(result)
 
             const memoryInMB = process?.memoryUsage?.rss()! / 1e+6
-            Logger.log("Current childProcess MB " + memoryInMB + "MB" ,"ChildProcess")
+
+            logger.log("Current child process memory:  " + memoryInMB + "MB" )
 
             if(memoryInMB >= MAX_MEMORY_RESTART){
-                Logger.warn("Memory in limit " + memoryInMB + "MB","ChildProcess" )
-                Logger.warn("Kill Child Process Id: " + process.pid, "ChildProcess")
-                process.kill(process.pid)
+                logger.warn("Memory in limit " + memoryInMB + "MB")
+                logger.warn("Kill Child Process Id: " + process.pid)
+                process.kill(process.pid)     
             }
 
         }
