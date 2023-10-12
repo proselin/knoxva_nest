@@ -9,6 +9,7 @@ import {join} from "path";
 import {FastifyAdapter, NestFastifyApplication} from "@nestjs/platform-fastify";
 import {LoggingInterceptor} from "@shared/interceptor/logging.interceptor";
 import {TransformInterceptor} from "@shared/interceptor/transform-response.interceptor";
+import {TimeoutInterceptor} from "@shared/interceptor/timeout.interceptor";
 
 export async function createApp() {
     setFlagsFromString('--expose_gc');
@@ -28,8 +29,13 @@ export async function createApp() {
     app.useGlobalInterceptors(
         new LoggingInterceptor()
     )
+
     app.useGlobalInterceptors(
         new TransformInterceptor<any>(new Reflector())
+    )
+
+    app.useGlobalInterceptors(
+        new TimeoutInterceptor()
     )
 
     app.enableVersioning({
