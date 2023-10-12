@@ -3,7 +3,6 @@ import {ChildProcessModule} from "./child-process.module";
 import {GenerateImageService} from "@generate-image/generate-image.service";
 import {PassDataChild} from "@shared/types/child.type";
 import {Logger} from "@nestjs/common";
-import * as process from "process";
 import {getEnvOrThrow} from "@shared/utils/functions";
 import {CONFIG_NAME} from "@shared/utils/enums";
 
