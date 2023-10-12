@@ -1,12 +1,14 @@
 import {setFlagsFromString} from "v8";
 import {runInNewContext} from "vm";
-import {NestFactory} from "@nestjs/core";
+import {NestFactory, Reflector} from "@nestjs/core";
 import {AppModule} from "../../app.module";
 import {ValidationPipe, VersioningType} from "@nestjs/common";
 import {VERSION} from "@shared/utils/enums";
 import * as express from "express";
 import {join} from "path";
 import {FastifyAdapter, NestFastifyApplication} from "@nestjs/platform-fastify";
+import {LoggingInterceptor} from "@shared/interceptor/logging.interceptor";
+import {TransformInterceptor} from "@shared/interceptor/transform-response.interceptor";
 
 export async function createApp() {
     setFlagsFromString('--expose_gc');
@@ -22,6 +24,14 @@ export async function createApp() {
     app.useGlobalPipes(
         new ValidationPipe()
     )
+
+    app.useGlobalInterceptors(
+        new LoggingInterceptor()
+    )
+    app.useGlobalInterceptors(
+        new TransformInterceptor<any>(new Reflector())
+    )
+
     app.enableVersioning({
         type: VersioningType.URI,
         defaultVersion: VERSION.V1
