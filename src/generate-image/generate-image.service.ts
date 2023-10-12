@@ -1,59 +1,67 @@
-import {randomUUID} from "crypto";
-import {Quality} from "@shared/utils/constant";
-import {Client} from "minio";
-import {Inject, Injectable, Logger} from "@nestjs/common";
-import {IReplaceObject} from "@shared/types/genImage.type";
-import {KonvaGen} from "@shared/entities/konva-gen";
-import {MINIO_CONNECTION} from "nestjs-minio";
+import { randomUUID } from "crypto";
+import { Quality } from "@shared/utils/constant";
+import { Client } from "minio";
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { IReplaceObject } from "@shared/types/genImage.type";
+import { KonvaGen } from "@shared/entities/konva-gen";
+import { MINIO_CONNECTION } from "nestjs-minio";
+import { getEnvOrThrow } from "@shared/utils/functions";
+import { CONFIG_NAME } from "@shared/utils/enums";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 
 @Injectable()
 export class GenerateImageService {
 
-    Logger = new Logger(GenerateImageService.name)
+
+    readonly SAVE_BUCKET = getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_MINIO_BUCKET_NAME)
 
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
         @Inject(MINIO_CONNECTION) private readonly minioClient: Client
-    ) {}
+    ) { }
 
     genImage(
         template: string,
         options: IReplaceObject[],
         genQuality: Quality = Quality.Normal
     ) {
-        return this.handleEvent({template, options, Quality: genQuality})
+        return this.handleEvent({ template, options, Quality: genQuality })
     }
 
 
-    handleEvent({template, options, Quality}: any) {
+    handleEvent({ template, options, Quality }: any) {
         Logger.log(":: Enter genImage function ")
-        const uidMain = randomUUID()
         return this.initTemplate(template, options).then(
             (konvaGen) => {
                 try {
                     return Promise.all(options.map((option) => {
+
                         const uid = randomUUID()
-                        // console.time(uid)
+
                         let localKonva = new KonvaGen(konvaGen.getStage())
-                        return this.genOneOptions(option, localKonva, Quality).then((result) => {
-                            return this.saveTicket({konvaGen: result, Quality, uid})
-                        });
+                        return this.genOneOptions(option, localKonva, Quality).then(
+                            (result) => this.saveTicket({ konvaGen: result, Quality, uid })
+                        );
+
                     })).then(
                         (res) => {
+
                             konvaGen.clean()
                             return res
+
                         }
                     )
 
                 } catch (e) {
-                    Logger.error(":: Error genImage function ")
-                    Logger.error(e)
+                    this.logger.error("Error genImage function", GenerateImageService.name)
+                    this.logger.error(e, GenerateImageService.name)
                 }
             })
     }
 
 
-    async saveTicket({konvaGen, Quality, uid}: {
+    async saveTicket({ konvaGen, Quality, uid }: {
         konvaGen: KonvaGen,
         Quality: Quality,
         uid: string,
@@ -65,20 +73,33 @@ export class GenerateImageService {
             "Content-Encoding": 'base64',
             "Content-Type": result?.type
         };
-        return await new Promise(async (resolve) => {
-            this.minioClient.putObject(
-                'tdh.generate-image',
+        return await new Promise((resolve, reject) => {
+           return this.minioClient.putObject(
+                this.SAVE_BUCKET,
                 `TDH-${uid}.png`,
                 (result?.data)!,
                 metaData
             ).then(
                 (res) => {
-                    Logger.log(res);
+
+                    this.logger.log("Minio push object response :", GenerateImageService.name)
+                    this.logger.log(res, GenerateImageService.name)
+
+                    /**
+                     * Clean konva object
+                     */
                     konvaGen.clean();
+
                     console.timeEnd(uid);
+
                     resolve(`TDH-${uid}.png`);
                 })
-        });
+                .catch(err => {
+                    this.logger.log("Minio push object error response :", GenerateImageService.name)
+                    this.logger.log(err, GenerateImageService.name)
+                    reject(err)
+                })
+        })
     }
 
 
@@ -97,18 +118,16 @@ export class GenerateImageService {
     }
 
 
-    genOneOptions(option: IReplaceObject, konvaGen: KonvaGen, genQuality: Quality) {
-        Logger.log(":: Enter genOneOptions function ")
-        Logger.log(":: GenQuality " + genQuality)
-        Logger.log(":: options " + JSON.stringify(option))
-        return konvaGen.replaceObject(option).then(
-            () => konvaGen
-        )
+    genOneOptions(option: IReplaceObject, konvaGen: KonvaGen, genQuality: Quality): Promise<KonvaGen> {
+        this.logger.log("Enter genOneOptions function ", GenerateImageService.name)
+        this.logger.log("GenQuality " + genQuality, GenerateImageService.name)
+        this.logger.log("options " + JSON.stringify(option), GenerateImageService.name)
+        return konvaGen.replaceObject(option).then(() => konvaGen)
     }
 
     async initTemplate(template: string | object, replaceOb: IReplaceObject[]): Promise<KonvaGen> {
-        Logger.log(":: Enter function initTemplate")
-        Logger.log(":: Template: " + typeof template == "string" ? template : JSON.stringify(template))
+        this.logger.log(":: Enter function initTemplate")
+        this.logger.log(":: Template: " + typeof template == "string" ? template : JSON.stringify(template))
         const konvaGen = new KonvaGen(template)
         await konvaGen.reFormImages(replaceOb)
         Logger.log(":: Complete function initTemplate")

@@ -1,0 +1,12 @@
+{
+	"name": "Node.js & TypeScript",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+	"postCreateCommand": "cd .devcontainer && . ./start-up.sh",
+	"forwardPorts": [6379],
+	"features": {
+		"ghcr.io/itsmechlark/features/redis-server:1": {
+			"version":"latest"
+		}
+	},
+	"remoteUser": "root"
+}
