@@ -10,7 +10,7 @@ import {CONFIG_NAME} from "@shared/utils/enums";
 const MAX_MEMORY_RESTART = +getEnvOrThrow(CONFIG_NAME.CHILD_MAX_RESTART_RAM)
 
 async function bootstrap() {
-    const app = await NestFactory.create(ChildProcessModule);
+    const app = await NestFactory.createMicroservice(ChildProcessModule);
     const service = app.select(ChildProcessModule).get(GenerateImageService)
 
     process.on('message', async (data: PassDataChild) => {
