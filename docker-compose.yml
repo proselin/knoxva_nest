@@ -1,31 +1,39 @@
 version: '3.8'
 services:
-#   redis: # Name of container
-#     image: redis
-#     ports:
-#       - 6379:6379
-#     volumes:
-#       - redis:/data
-#     networks:
-#       - local
+  redis: # Name of container
+    image: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+    networks:
+      - local
   api:
     build:
       dockerfile: Dockerfile
       context: .
-      # Only will build development stage from our dockerfile
       target: development
     volumes:
       - .:/usr/src/app
-    # Run a command against the development stage of the image
-
     ports:
       - 3000:3000
-    # depends_on:
-      # - redis
-    # command:
-    #   - node ./dist/main.js
-# volumes:
-  # redis:
-  #   driver: local
+    depends_on:
+      - minio
+      - redis
+    command:
+      - node ./dist/main.js
+  minio: 
+    image: minio/minio
+    ports:
+      - 9000:9000
+    volumes: 
+      - minio:/minio
+    networks:
+      - local
+volumes:
+  minio:
+    driver: local
+  redis:
+    driver: local
 networks:
   local:
