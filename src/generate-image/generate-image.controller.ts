@@ -18,11 +18,4 @@ export class GenerateImageController {
     async genImage(@Body() generateImageDTO: GenerateImageDTO) {
         await this.genImageProducer.addJob(generateImageDTO)
     }
-
-    @Post()
-    @Version(VERSION.V2)
-    @HttpCode(HttpStatus.CREATED)
-    async genImageV2() {
-        Logger.log('Vào Cái 2 rồi nè')
-    }
 }
