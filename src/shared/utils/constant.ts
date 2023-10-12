@@ -9,4 +9,4 @@ export enum Quality {
 
 export const DEFINED_TYPE_ATTRIBUTE: string = '0q9u0o2c2k2h3a1n1h958'
 
-export const VERSIONS: VERSION[] = [VERSION.V1, VERSION.V2]
+export const VERSIONS: VERSION[] = [VERSION.V1]

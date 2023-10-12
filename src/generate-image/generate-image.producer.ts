@@ -14,15 +14,11 @@ type JobBulk = Array<{
 @Injectable()
 export class GenerateImageProducer {
 
-    readonly ATTEMPTS = getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_ATTEMPTS, 3)
-    readonly DELAY = getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_DELAY, 3000)
-    readonly BACKOFF_TYPE = getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_BACKOFF_TYPE, 'exponential')
-    readonly BACKOFF_DELAY = getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_BACKOFF_DELAY, 1000)
     readonly MAX_IMAGE_PER_JOB = +getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_MAX_GENERATE_PER_JOB)
 
     constructor(
         @InjectQueue(getEnvOrThrow(CONFIG_NAME.GEN_IMAGE_QUEUE_NAME))
-        private generateImageQueue: Queue<any>,
+        private generateImageQueue: Queue<GenerateImageDTO>,
     ) {
     }
 
@@ -32,12 +28,7 @@ export class GenerateImageProducer {
 
         const jobArr: JobBulk = []
         const jobOptions: JobOptions = {
-            attempts: +this.ATTEMPTS,
-            delay: +this.DELAY,
-            backoff: {
-                type: this.BACKOFF_TYPE,
-                delay: +this.BACKOFF_DELAY,
-            },
+
         }
         /**
          * Dùng while để lấy hết tất cả các phần tử trong mảng options

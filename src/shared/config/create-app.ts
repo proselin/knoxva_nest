@@ -6,6 +6,7 @@ import {ValidationPipe, VersioningType} from "@nestjs/common";
 import {VERSION} from "@shared/utils/enums";
 import * as express from "express";
 import {join} from "path";
+import {FastifyAdapter, NestFastifyApplication} from "@nestjs/platform-fastify";
 
 export async function createApp() {
     setFlagsFromString('--expose_gc');
@@ -13,7 +14,10 @@ export async function createApp() {
     if (!global.gc) {
         global.gc = gc
     }
-    const app = await NestFactory.create(AppModule)
+    const app = await NestFactory.create<NestFastifyApplication>(
+        AppModule,
+        new FastifyAdapter()
+    )
 
     app.useGlobalPipes(
         new ValidationPipe()
