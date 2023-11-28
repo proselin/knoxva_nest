@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   redis: # Name of container
     image: redis
@@ -12,7 +12,7 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-      target: development
+      target: production
     volumes:
       - .:/usr/src/app
     ports:
@@ -20,17 +20,21 @@ services:
     depends_on:
       - minio
       - redis
-    command:
-      - node ./dist/main.js
-  minio: 
+  #    command:
+  #      - node ./dist/main.js
+  minio:
     image: minio/minio
     ports:
+      - 9200:9200
       - 9000:9000
-    volumes: 
+    volumes:
       - minio:/minio
+    command: server ./minio --address :9000 --console-address :9200
     networks:
       - local
 volumes:
+  api:
+    driver: local
   minio:
     driver: local
   redis:
