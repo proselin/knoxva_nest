@@ -28,7 +28,7 @@ services:
       - 9200:9200
       - 9000:9000
     volumes:
-      - minio:/minio
+      - ./minio:/minio
     command: server ./minio --address :9000 --console-address :9200
     networks:
       - local
