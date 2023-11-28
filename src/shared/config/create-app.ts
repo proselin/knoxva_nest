@@ -1,15 +1,15 @@
-import {setFlagsFromString} from "v8";
-import {runInNewContext} from "vm";
-import {NestFactory, Reflector} from "@nestjs/core";
-import {AppModule} from "../../app.module";
-import {ValidationPipe, VersioningType} from "@nestjs/common";
-import {VERSION} from "@shared/utils/enums";
+import { setFlagsFromString } from "v8";
+import { runInNewContext } from "vm";
+import { NestFactory, Reflector } from "@nestjs/core";
+import { AppModule } from "../../app.module";
+import { ValidationPipe, VersioningType } from "@nestjs/common";
+import { VERSION } from "@shared/utils/enums";
 import * as express from "express";
-import {join} from "path";
-import {FastifyAdapter, NestFastifyApplication} from "@nestjs/platform-fastify";
-import {LoggingInterceptor} from "@shared/interceptor/logging.interceptor";
-import {TransformInterceptor} from "@shared/interceptor/transform-response.interceptor";
-import {TimeoutInterceptor} from "@shared/interceptor/timeout.interceptor";
+import { join } from "path";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { LoggingInterceptor } from "@shared/interceptor/logging.interceptor";
+import { TransformInterceptor } from "@shared/interceptor/transform-response.interceptor";
+import { TimeoutInterceptor } from "@shared/interceptor/timeout.interceptor";
 
 export async function createApp() {
 
@@ -47,8 +47,6 @@ export async function createApp() {
     });
 
     app.setGlobalPrefix('api')
-
-    app.use(express.static(join(__dirname, 'assets')));
-
+    app.use(express.static(join(__dirname,"..", "..", 'assets')));
     return app
 }

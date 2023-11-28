@@ -12,7 +12,7 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-      target: development
+      target: production
     volumes:
       - .:/usr/src/app
     ports:
@@ -21,11 +21,13 @@ services:
       - minio
       - redis
     command:
-      - node ./dist/main.js
-  minio: 
+      - ./dist/main.js
+  minio:
     image: minio/minio
+    command: server ./minio --address :9000 --console-address :9200
     ports:
       - 9000:9000
+      - 9200:9200
     volumes: 
       - minio:/minio
     networks:

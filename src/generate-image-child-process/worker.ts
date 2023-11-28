@@ -1,10 +1,10 @@
-import {NestFactory} from "@nestjs/core";
-import {ChildProcessModule} from "./child-process.module";
-import {GenerateImageService} from "@generate-image/generate-image.service";
-import {PassDataChild} from "@shared/types/child.type";
-import {Logger} from "@nestjs/common";
-import {getEnvOrThrow} from "@shared/utils/functions";
-import {CONFIG_NAME} from "@shared/utils/enums";
+import { NestFactory } from "@nestjs/core";
+import { ChildProcessModule } from "./child-process.module";
+import { GenerateImageService } from "@generate-image/generate-image.service";
+import { PassDataChild } from "@shared/types/child.type";
+import { Logger } from "@nestjs/common";
+import { getEnvOrThrow } from "@shared/utils/functions";
+import { CONFIG_NAME } from "@shared/utils/enums";
 
 const MAX_MEMORY_RESTART = +getEnvOrThrow(CONFIG_NAME.CHILD_MAX_RESTART_RAM)
 const logger = new Logger(ChildProcessModule.name)
@@ -33,7 +33,7 @@ async function bootstrap() {
             if(memoryInMB >= MAX_MEMORY_RESTART){
                 logger.warn("Memory in limit " + memoryInMB + "MB")
                 logger.warn("Kill Child Process Id: " + process.pid)
-                process.kill(process.pid)     
+                process.exit(0)
             }
 
         }

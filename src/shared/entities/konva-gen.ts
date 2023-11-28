@@ -1,11 +1,12 @@
-import {Logger} from "@nestjs/common";
-import {Node, NodeConfig} from "konva/lib/Node";
-import {Image} from "konva/lib/shapes/Image";
-import {Stage} from "konva/lib/Stage";
-import {Text} from "konva/lib/shapes/Text";
+import { Logger } from "@nestjs/common";
+import { Node, NodeConfig } from "konva/lib/Node";
+import { Image } from "konva/lib/shapes/Image";
+import { Stage } from "konva/lib/Stage";
+import { Text } from "konva/lib/shapes/Text";
 import { IReplaceObject, ToDataUrlConfig, ToImageConfig } from "../types/genImage.type";
 import { Quality } from "../utils/constant";
 import * as process from "process";
+import * as console from "console";
 
 const Konva = require('konva')
 
@@ -60,10 +61,14 @@ export class KonvaGen {
         const imagesId = (this.stage.find('Image') as Image[])
             .filter(value => !!value?.getAttr('source'))
             .filter(value => !(value.getAttr('id') in replaceOb[0]))
-        this.logger.log("Image length", imagesId.length)
+        this.logger.log("::-> Image length: " + imagesId.length)
         await Promise.all(
             imagesId.map(value => this.reFormSingleImage(value))
-        )
+        ).catch(e => {
+            Logger.error(e)
+            console.trace(e)
+            throw e
+        })
     }
 
     reFormSingleText(node: Node<NodeConfig>, value: string, isStrict: boolean = false) {
@@ -76,7 +81,7 @@ export class KonvaGen {
 
     }
 
-    private reFormSingleImage(node: Node<NodeConfig>, value?: string) {
+    private reFormSingleImage(node: Node<NodeConfig>, value?: string, cache: boolean = false) {
 
         return new Promise<void>((resolve, reject) => {
             if (!node.attrs['source'] && !value) {
@@ -86,10 +91,10 @@ export class KonvaGen {
 
             const url = value ?? node.attrs['source']
             this.fromURL(url, (image: Image) => {
-                node.setAttr('image', image.image())
-                resolve(url)
+                    node.setAttr('image', image.image())
+                    resolve(url)
                 },
-                err => reject(err)
+                (err: any) => reject(err)
             )
         })
 
@@ -117,6 +122,7 @@ export class KonvaGen {
     toDataUrl(quality: Quality, option?: ToDataUrlConfig) {
         let config: ToDataUrlConfig = {
             pixelRatio: this.getQualityNumber(quality),
+            mimeType: 'image/jpeg'
         }
         option && (config = {...option})
         return (this.stage.toDataURL(config))
@@ -125,9 +131,22 @@ export class KonvaGen {
     toImage(quality: Quality, option?: ToImageConfig) {
         let config: ToImageConfig = {
             pixelRatio: this.getQualityNumber(quality),
+            mimeType: 'image/png'
         }
         option && (config = {...option})
         return this.stage.toImage(config)
+    }
+
+    toBuffer(quality: Quality) {
+        const canvas = this.stage.toCanvas(
+            {
+                pixelRatio: this.getQualityNumber(quality)
+            }
+        )
+        return {
+                data:  canvas.toBuffer('image/png'),
+                type: 'image/png'
+        }
     }
 
     private getQualityNumber(quality: Quality) {
@@ -151,7 +170,7 @@ export class KonvaGen {
     }
 
 
-     replaceObject(object: IReplaceObject) {
+    replaceObject(object: IReplaceObject) {
         this.logger.log(":: Enter replaceObject function ")
         this.logger.log(":: Replace params " + JSON.stringify(object))
         return Promise.all(Object.entries(object).map(([key, value]) => {
@@ -162,7 +181,7 @@ export class KonvaGen {
     }
 
 
-     replaceSingle(node: Node<NodeConfig>, value: any) {
+    replaceSingle(node: Node<NodeConfig>, value: any) {
         this.logger.log(":: Enter replaceSingle params " + value)
         switch (node.getClassName()) {
             case 'Image':
@@ -177,7 +196,7 @@ export class KonvaGen {
         this.stage.clearCache()
     }
 
-    clear(){
+    clear() {
         this.stage.clear()
     }
 
@@ -189,7 +208,9 @@ export class KonvaGen {
         this.clear()
         this.clearCache()
         this.destroy()
-        if (global?.gc) {global.gc();}
+        if (global?.gc) {
+            global.gc();
+        }
     }
 
 

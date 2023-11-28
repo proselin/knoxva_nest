@@ -1,9 +1,9 @@
-import {Injectable} from "@nestjs/common";
-import {InjectQueue} from "@nestjs/bull";
-import {Job, JobOptions, Queue} from "bull";
-import {GenerateImageDTO} from "@shared/dtos/generateImageDTO";
-import {CONFIG_NAME} from "@shared/utils/enums";
-import {getEnvOrThrow} from "@shared/utils/functions";
+import { Injectable } from "@nestjs/common";
+import { InjectQueue } from "@nestjs/bull";
+import { JobOptions, Queue } from "bull";
+import { GenerateImageDTO } from "@shared/dtos/generateImageDTO";
+import { CONFIG_NAME } from "@shared/utils/enums";
+import { getEnvOrThrow } from "@shared/utils/functions";
 
 type JobBulk = Array<{
     name?: string | undefined;

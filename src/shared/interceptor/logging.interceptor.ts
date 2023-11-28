@@ -1,10 +1,10 @@
-import {CallHandler, ExecutionContext, Logger, NestInterceptor} from '@nestjs/common';
-import {Observable} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import { CallHandler, ExecutionContext, Logger, NestInterceptor } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 export class LoggingInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-        Logger.log(`[${context.getHandler().name}]::` + `[via :${context.getType()}]::` + "Incomming resquest ", context.getClass().name)
+        Logger.log(`[${context.getHandler().name}]::` + `[via:${context.getType()}]::` + "Incomming resquest ", context.getClass().name)
         const now = Date.now();
         return next
             .handle()
