@@ -2,6 +2,7 @@ version: "3.8"
 services:
   redis: # Name of container
     image: redis
+    container_name: redis
     ports:
       - 6379:6379
     volumes:
@@ -13,23 +14,41 @@ services:
       dockerfile: Dockerfile
       context: .
       target: production
+    env_file:
+      - ./src/environments/.env.docker
     volumes:
       - .:/usr/src/app
+    container_name: knoxva-api
     ports:
       - 3000:3000
     depends_on:
       - minio
       - redis
+    networks:
+      - local
   #    command:
   #      - node ./dist/main.js
   minio:
+    container_name: minio
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: MinioDeploy
     image: minio/minio
     ports:
-      - 9200:9200
       - 9000:9000
+      - 9200:9200
     volumes:
-      - ./minio:/minio
-    command: server ./minio --address :9000 --console-address :9200
+      - ./minio:/usr/minio
+    command: [
+      "minio",
+      "server",
+      "/usr/minio",
+      "--address",
+      ":9000",
+      "--console-address",
+      ":9200"
+    ]
     networks:
       - local
 volumes:

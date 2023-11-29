@@ -72,3 +72,13 @@ COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
 # Start the server using the production build
 CMD [ "node", "dist/main.js" ]
+
+
+FROM minio/minio as MinioDeploy
+
+WORKDIR /usr/minio
+
+EXPOSE 9000/tcp
+EXPOSE 9200/tcp
+
+COPY ./minio /usr/minio
