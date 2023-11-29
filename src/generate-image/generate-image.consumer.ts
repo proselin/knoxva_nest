@@ -6,6 +6,7 @@ import child from "child_process";
 import {Quality} from "@shared/utils/constant";
 import {ForkProcessService} from "@generate-child-process/fork-process.service";
 import {randomUUID} from "crypto";
+import { error } from "console";
 
 
 @Processor('generate-ticket')
@@ -22,7 +23,7 @@ export class GenerateImageConsumer {
         await job.progress(progress);
         const uidMain = randomUUID()
         console.time(uidMain)
-        return await this.sendToChildProcess(
+        return this.sendToChildProcess(
             job.data.template,
             job.data.options,
             job.data.genQuality
@@ -31,7 +32,10 @@ export class GenerateImageConsumer {
             global?.gc && global.gc()
             console.timeEnd(uidMain)
             return rs
-        })
+        }).catch(error => {
+            this.logger.error(error)
+            throw error
+        }) 
     }
 
     sendToChildProcess(template: string, obReplace: IReplaceObject[], genQuality: Quality) {
@@ -41,9 +45,15 @@ export class GenerateImageConsumer {
                 const childProcess: child.ChildProcess = this.genImageProcess.getForkedNestJsGenImageChildModule()
                 if (childProcess) {
 
-                    const callBack = (value: child.Serializable) => {
+                    const callBack = (value:     {
+                        isError: boolean,
+                        data: Error | string [] | object
+                    }) => {
+                        if(value.isError){
+                           reject(value.data)
+                        }
                         childProcess?.removeListener('message', callBack)
-                        resolve(value)
+                        resolve(value.data)
                     }
 
                     childProcess.addListener('message', callBack)

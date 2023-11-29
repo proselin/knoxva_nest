@@ -17,14 +17,16 @@ async function bootstrap() {
     process.on('message', async (data: PassDataChild) => {
 
         if (data.command == "generateImage") {
-
-            const result = await service?.genImage(
-                data.template,
-                data.replaceObj,
-                data.quality
-            )
-
-            process?.send && process.send(result)
+            try{
+                const result = await service?.genImage(
+                    data.template,
+                    data.replaceObj,
+                    data.quality
+                )
+                process?.send && process.send({
+                    isError: false,
+                    data: result
+                })
 
             const memoryInMB = process?.memoryUsage?.rss()! / 1e+6
 
@@ -33,9 +35,15 @@ async function bootstrap() {
             if(memoryInMB >= MAX_MEMORY_RESTART){
                 logger.warn("Memory in limit " + memoryInMB + "MB")
                 logger.warn("Kill Child Process Id: " + process.pid)
-                process.kill(process.pid)     
+                process.exit(0)   
             }
 
+            }catch(e) {
+                process?.send && process.send({
+                    isError: true,
+                    data: e
+                })
+            }
         }
     });
 }
